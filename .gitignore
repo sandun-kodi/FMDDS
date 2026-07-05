@@ -1,0 +1,32 @@
+# --- .NET Build Artifacts ---
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# --- Node/Frontend ---
+node_modules/
+dist/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- IDE & Editors ---
+.vs/
+.vscode/
+*.suo
+*.user
+*.sln.docstates
+.idea/
+*.iws
+.DS_Store
+
+# --- Local Databases / Temporary files ---
+*.db
+*.log
