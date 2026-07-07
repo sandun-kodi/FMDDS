@@ -7,25 +7,33 @@ This document records the completed and fully tested components, configurations,
 ## 1. Backend Architecture & API Layer
 The backend is built on **.NET 8 Web API** and is located in the `backend/` directory.
 
-### Database Configuration (PostgreSQL)
+### Database Configuration & Migrations (PostgreSQL)
 * **Server Address:** `localhost:5432`
 * **Database Name:** `fmdds_db`
 * **Username/Password:** `postgres` / `admin` (updated)
-* **Migrations:** Generated and applied via Entity Framework Core (`InitialCreate`).
-* **Seeded Test Users & Credentials:**
-  
-  | Role / User Type | Username | Password | Full Name |
-  | :--- | :--- | :--- | :--- |
-  | **System Administrator** | `admin` | `password123` | System Admin |
-  | **Judicial Medical Officer** | `jmo_perera` | `password123` | Dr. Perera (JMO) |
-  | **Medical Officer** | `mo_silva` | `password123` | Dr. Silva (MO) |
-  | **Laboratory Staff** | `lab_fernando` | `password123` | Mr. Fernando (Lab) |
-  | **Clerical Staff** | `clerk_jayasuriya` | `password123` | Mrs. Jayasuriya (Clerk) |
+* **Migrations:** Database schemas are applied via EF Core (`InitialCreate` followed by `AddRbacAndNotifications`).
+* **Complete Schema (20 Tables):** The database maps 100% of the SRS database schema:
+  * *Auth/RBAC:* `"User"`, `"Role"`, `Permission`, `UserRole`, `RolePermission`
+  * *Demographics:* `Patient`, `Hospital`, `Ward`, `ReferralSourceType`, `Department`
+  * *Workflow/Intake:* `"Case"`
+  * *Clinical/Autopsy:* `ClinicalExamination`, `PostmortemExamination`, `MedicoLegalReport`
+  * *Evidence/Lab:* `Evidence`, `ChainOfCustody`, `LaboratoryRequest`, `LaboratoryResult`
+  * *Auditing/Notifs:* `AuditLog`, `Notification`
+
+### Seeded Test Users & Credentials
+User accounts are dynamically populated and assigned roles/permissions inside the database:
+
+| Role / User Type | Username | Password | Full Name | Dynamic Role Mapping |
+| :--- | :--- | :--- | :--- | :--- |
+| **System Administrator** | `admin` | `password123` | System Admin | Assigned Role `System Administrator` |
+| **Judicial Medical Officer** | `jmo_perera` | `password123` | Dr. Perera (JMO) | Assigned Role `Judicial Medical Officer` |
+| **Medical Officer** | `mo_silva` | `password123` | Dr. Silva (MO) | Assigned Role `Medical Officer` |
+| **Laboratory Staff** | `lab_fernando` | `password123` | Mr. Fernando (Lab) | Assigned Role `Laboratory Staff` |
+| **Clerical Staff** | `clerk_jayasuriya` | `password123` | Mrs. Jayasuriya (Clerk) | Assigned Role `Clerical Staff` |
 
 ### Services & Controllers
-* **Authentication Service (`AuthController.cs`):** Generates JWT tokens containing role permissions.
+* **Authentication Service (`AuthController.cs`):** Performs dynamic database queries (joining `UserRoles`, `RolePermissions`, `Roles`, and `Permissions`) to authenticate users and generate JWT claims.
 * **CORS Policy:** Enabled to allow communication from the frontend origin `http://localhost:5173`.
-* **Database Schema:** Full support for `Case`, `User`, `AuditLog`, `ClinicalExamination`, `PostmortemExamination`, `ChainOfCustody`, `Evidence`, `LaboratoryRequest`, `LaboratoryResult`, and `MedicoLegalReport`.
 
 ---
 

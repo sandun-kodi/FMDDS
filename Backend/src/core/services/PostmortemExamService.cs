@@ -72,7 +72,8 @@ namespace FMDDS.Core.Services
                 CaseID = caseID,
                 ExaminerID = examinerID,
                 Findings = findings.Trim(),
-                CauseOfDeath = causeOfDeath.Trim()
+                CauseOfDeath = causeOfDeath.Trim(),
+                ExamDate = DateTime.UtcNow
             };
 
             await _examRepo.AddAsync(exam);

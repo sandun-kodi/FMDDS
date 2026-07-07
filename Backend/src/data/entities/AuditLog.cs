@@ -7,7 +7,8 @@ namespace FMDDS.Data.Entities
         public int AuditLogID { get; set; }
         public string Action { get; set; }
         public DateTime Timestamp { get; set; }
-        public int UserID { get; set; }
+        public int? UserID { get; set; }
+        public string? IPAddress { get; set; }
 
         public User User { get; set; }
     }
