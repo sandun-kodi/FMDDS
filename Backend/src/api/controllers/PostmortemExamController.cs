@@ -15,10 +15,12 @@ namespace FMDDS.API.Controllers
     public class PostmortemExamController : ControllerBase
     {
         private readonly PostmortemExamService _examService;
+        private readonly FMDDS.Data.Db.AppDbContext _dbContext;
 
-        public PostmortemExamController(PostmortemExamService examService)
+        public PostmortemExamController(PostmortemExamService examService, FMDDS.Data.Db.AppDbContext dbContext)
         {
             _examService = examService;
+            _dbContext = dbContext;
         }
 
         /// <summary>
@@ -58,6 +60,28 @@ namespace FMDDS.API.Controllers
                 return StatusCode(500, new { code = "ERR_INTERNAL_SERVER", message = "An error occurred while saving the examination." });
             }
         }
+
+        [HttpPost("causes")]
+        [PermissionAuthorize("exam:record_postmortem")]
+        public async Task<IActionResult> SaveCausesOfDeath(int caseId, [FromBody] System.Collections.Generic.List<CauseOfDeathDto> request)
+        {
+            var exam = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(_dbContext.PostmortemExaminations, e => e.CaseID == caseId);
+            if (exam == null) return NotFound("Postmortem exam not found for this case.");
+
+            foreach (var cause in request)
+            {
+                _dbContext.CauseOfDeathRecords.Add(new FMDDS.Data.Entities.CauseOfDeathRecord
+                {
+                    PostmortemID = exam.PostmortemExamID,
+                    RecordType = cause.RecordType,
+                    Category = cause.Category,
+                    Description = cause.Description
+                });
+            }
+
+            await _dbContext.SaveChangesAsync();
+            return Ok(new { message = "Causes of death saved." });
+        }
     }
 
     /// <summary>
@@ -68,5 +92,12 @@ namespace FMDDS.API.Controllers
         public int ExaminerID { get; set; }
         public string Findings { get; set; }
         public string CauseOfDeath { get; set; }
+    }
+
+    public class CauseOfDeathDto
+    {
+        public string RecordType { get; set; }
+        public string Category { get; set; }
+        public string Description { get; set; }
     }
 }

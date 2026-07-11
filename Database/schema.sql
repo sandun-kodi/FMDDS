@@ -10,9 +10,14 @@ DROP VIEW IF EXISTS VW_OpenCases CASCADE;
 
 DROP TABLE IF EXISTS Notification CASCADE;
 DROP TABLE IF EXISTS AuditLog CASCADE;
+DROP TABLE IF EXISTS SystemSetting CASCADE;
+DROP TABLE IF EXISTS CauseOfDeathRecord CASCADE;
+DROP TABLE IF EXISTS Attachment CASCADE;
+DROP TABLE IF EXISTS LoginAttempt CASCADE;
 DROP TABLE IF EXISTS MedicoLegalReport CASCADE;
 DROP TABLE IF EXISTS LaboratoryResult CASCADE;
 DROP TABLE IF EXISTS LaboratoryRequest CASCADE;
+DROP TABLE IF EXISTS LaboratoryTestType CASCADE;
 DROP TABLE IF EXISTS ChainOfCustody CASCADE;
 DROP TABLE IF EXISTS Evidence CASCADE;
 DROP TABLE IF EXISTS PostmortemExamination CASCADE;
@@ -40,7 +45,17 @@ CREATE TABLE "User" (
     FullName VARCHAR(120) NOT NULL,
     Email VARCHAR(150) NULL,
     IsActive BOOLEAN NOT NULL DEFAULT TRUE,
+    FailedLoginCount INT NOT NULL DEFAULT 0,
+    LockoutEnd TIMESTAMP NULL,
     CONSTRAINT UQ_User_Username UNIQUE (Username)
+);
+
+CREATE TABLE LoginAttempt (
+    AttemptID SERIAL PRIMARY KEY,
+    Username VARCHAR(50) NOT NULL,
+    IPAddress VARCHAR(50) NULL,
+    AttemptDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    IsSuccess BOOLEAN NOT NULL
 );
 
 CREATE TABLE "Role" (
@@ -163,10 +178,21 @@ CREATE TABLE PostmortemExamination (
     CaseID INT NOT NULL,
     ExaminerID INT NOT NULL,
     Findings TEXT NOT NULL,
-    CauseOfDeath VARCHAR(255) NOT NULL,
+    CauseOfDeath VARCHAR(255) NULL,
     CONSTRAINT UQ_PostmortemExam_CaseID UNIQUE (CaseID),
     CONSTRAINT FK_PostmortemExam_Case FOREIGN KEY (CaseID) REFERENCES "Case" (CaseID) ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT FK_PostmortemExam_User FOREIGN KEY (ExaminerID) REFERENCES "User" (UserID) ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE CauseOfDeathRecord (
+    CauseID SERIAL PRIMARY KEY,
+    PostmortemID INT NOT NULL,
+    RecordType VARCHAR(50) NOT NULL DEFAULT 'Final',
+    Category VARCHAR(50) NOT NULL,
+    Description TEXT NOT NULL,
+    CONSTRAINT FK_CauseOfDeath_Postmortem FOREIGN KEY (PostmortemID) REFERENCES PostmortemExamination (PostmortemID) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT CK_Cause_RecordType CHECK (RecordType IN ('Provisional', 'Final')),
+    CONSTRAINT CK_Cause_Category CHECK (Category IN ('Immediate', 'Antecedent', 'Underlying', 'Manner of Death', 'Other'))
 );
 
 CREATE TABLE MedicoLegalReport (
@@ -179,6 +205,18 @@ CREATE TABLE MedicoLegalReport (
     CONSTRAINT FK_Report_Case FOREIGN KEY (CaseID) REFERENCES "Case" (CaseID) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT FK_Report_User FOREIGN KEY (ApprovedByID) REFERENCES "User" (UserID) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT CK_Report_ApprovalStatus CHECK (ApprovalStatus IN ('Draft', 'Approved'))
+);
+
+CREATE TABLE Attachment (
+    AttachmentID SERIAL PRIMARY KEY,
+    CaseID INT NOT NULL,
+    FileName VARCHAR(255) NOT NULL,
+    FilePath VARCHAR(500) NOT NULL,
+    UploadedByID INT NOT NULL,
+    UploadDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Description TEXT NULL,
+    CONSTRAINT FK_Attachment_Case FOREIGN KEY (CaseID) REFERENCES "Case" (CaseID) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT FK_Attachment_User FOREIGN KEY (UploadedByID) REFERENCES "User" (UserID) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 --------------------------------------------------------------------------------
@@ -207,12 +245,22 @@ CREATE TABLE ChainOfCustody (
     CONSTRAINT FK_Custody_User_Receiver FOREIGN KEY (ReceivingOfficerID) REFERENCES "User" (UserID) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+CREATE TABLE LaboratoryTestType (
+    TestTypeID SERIAL PRIMARY KEY,
+    TestName VARCHAR(100) NOT NULL,
+    Description TEXT NULL,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE,
+    CONSTRAINT UQ_LabTestType_Name UNIQUE (TestName)
+);
+
 CREATE TABLE LaboratoryRequest (
     LabRequestID SERIAL PRIMARY KEY,
     CaseID INT NOT NULL,
+    TestTypeID INT NULL,
     RequestDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     Status VARCHAR(30) NOT NULL DEFAULT 'Pending',
     CONSTRAINT FK_LabRequest_Case FOREIGN KEY (CaseID) REFERENCES "Case" (CaseID) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT FK_LabRequest_TestType FOREIGN KEY (TestTypeID) REFERENCES LaboratoryTestType (TestTypeID) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT CK_LabRequest_Status CHECK (Status IN ('Pending', 'Processing', 'Completed'))
 );
 
@@ -226,8 +274,19 @@ CREATE TABLE LaboratoryResult (
 );
 
 --------------------------------------------------------------------------------
--- 6. Notifications & Logs
+-- 6. Notifications, Logs & Admin
 --------------------------------------------------------------------------------
+
+CREATE TABLE SystemSetting (
+    SettingID SERIAL PRIMARY KEY,
+    SettingKey VARCHAR(100) NOT NULL,
+    SettingValue VARCHAR(500) NOT NULL,
+    Description TEXT NULL,
+    LastUpdatedByID INT NULL,
+    LastUpdatedDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT UQ_SystemSetting_Key UNIQUE (SettingKey),
+    CONSTRAINT FK_SystemSetting_User FOREIGN KEY (LastUpdatedByID) REFERENCES "User" (UserID) ON UPDATE CASCADE ON DELETE SET NULL
+);
 
 CREATE TABLE AuditLog (
     AuditID SERIAL PRIMARY KEY,
@@ -261,8 +320,12 @@ CREATE INDEX IX_Ward_HospitalID ON Ward (HospitalID);
 CREATE INDEX IX_Evidence_CaseID ON Evidence (CaseID);
 CREATE INDEX IX_ChainOfCustody_EvidenceID ON ChainOfCustody (EvidenceID);
 CREATE INDEX IX_LabRequest_CaseID ON LaboratoryRequest (CaseID);
+CREATE INDEX IX_LabRequest_TestTypeID ON LaboratoryRequest (TestTypeID);
 CREATE INDEX IX_MedicoLegalReport_ApprovalStatus ON MedicoLegalReport (ApprovalStatus);
 CREATE INDEX IX_AuditLog_UserID_Timestamp ON AuditLog (UserID, Timestamp);
+CREATE INDEX IX_LoginAttempt_Username_Date ON LoginAttempt (Username, AttemptDate);
+CREATE INDEX IX_Attachment_CaseID ON Attachment (CaseID);
+CREATE INDEX IX_CauseOfDeath_PostmortemID ON CauseOfDeathRecord (PostmortemID);
 
 --------------------------------------------------------------------------------
 -- 8. Relational Views Definition

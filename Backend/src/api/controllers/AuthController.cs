@@ -45,14 +45,39 @@ namespace FMDDS.API.Controllers
                 return Unauthorized(new { code = "ERR_AUTH_FAILED", message = "Invalid username or password." });
             }
 
+            // Check Lockout
+            if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
+            {
+                return StatusCode(423, new { code = "ERR_ACCOUNT_LOCKED", message = "Account locked due to too many failed attempts. Please try again later." });
+            }
+
             // For testing: accept "password123" as a universal test password
-            // In production, use BCrypt: BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)
             bool isValidPassword = request.Password == "password123";
+
+            var attempt = new LoginAttempt
+            {
+                Username = request.Username,
+                IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown",
+                AttemptDate = DateTime.UtcNow,
+                IsSuccess = isValidPassword
+            };
+            _dbContext.LoginAttempts.Add(attempt);
 
             if (!isValidPassword)
             {
+                user.FailedLoginCount++;
+                if (user.FailedLoginCount >= 5)
+                {
+                    user.LockoutEnd = DateTime.UtcNow.AddMinutes(15);
+                }
+                await _dbContext.SaveChangesAsync();
                 return Unauthorized(new { code = "ERR_AUTH_FAILED", message = "Invalid username or password." });
             }
+
+            // Reset lockout counters on success
+            user.FailedLoginCount = 0;
+            user.LockoutEnd = null;
+            await _dbContext.SaveChangesAsync();
 
             // Map role and permissions based on username pattern (simplified for testing)
             var (roleName, permissions) = GetRoleAndPermissions(user.Username);
