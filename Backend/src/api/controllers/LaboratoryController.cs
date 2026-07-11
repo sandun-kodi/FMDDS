@@ -15,10 +15,19 @@ namespace FMDDS.API.Controllers
     public class LaboratoryController : ControllerBase
     {
         private readonly LaboratoryService _labService;
+        private readonly FMDDS.Data.Db.AppDbContext _dbContext;
 
-        public LaboratoryController(LaboratoryService labService)
+        public LaboratoryController(LaboratoryService labService, FMDDS.Data.Db.AppDbContext dbContext)
         {
             _labService = labService;
+            _dbContext = dbContext;
+        }
+
+        [HttpGet("lab-test-types")]
+        public async Task<IActionResult> GetLabTestTypes()
+        {
+            var types = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(_dbContext.LaboratoryTestTypes);
+            return Ok(types);
         }
 
         /// <summary>

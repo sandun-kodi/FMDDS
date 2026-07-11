@@ -4,6 +4,11 @@ import Dashboard from './Dashboard';
 import Layout from './Layout';
 import PatientRegistration from './PatientRegistration';
 
+import LabInvestigations from './LabInvestigations';
+import SystemSettings from './SystemSettings';
+import CauseOfDeathForm from './CauseOfDeathForm';
+import AttachmentUploader from './AttachmentUploader';
+
 // Placeholder components for routing completeness
 const Placeholder = ({ title }) => (
   <div style={{ padding: '1rem' }}>
@@ -23,9 +28,11 @@ function App() {
         <Route path="/patients/register" element={<Layout><PatientRegistration /></Layout>} />
         <Route path="/cases/register" element={<Layout><Placeholder title="Register Case (SCR-004)" /></Layout>} />
         <Route path="/exams/clinical" element={<Layout><Placeholder title="Clinical Examination (SCR-005)" /></Layout>} />
-        <Route path="/exams/postmortem" element={<Layout><Placeholder title="Postmortem Examination (SCR-006)" /></Layout>} />
-        <Route path="/lab" element={<Layout><Placeholder title="Lab Investigations (SCR-007)" /></Layout>} />
+        <Route path="/exams/postmortem" element={<Layout><CauseOfDeathForm /></Layout>} />
+        <Route path="/lab" element={<Layout><LabInvestigations /></Layout>} />
         <Route path="/search" element={<Layout><Placeholder title="Search Cases (SCR-010)" /></Layout>} />
+        <Route path="/documents" element={<Layout><AttachmentUploader /></Layout>} />
+        <Route path="/settings" element={<Layout><SystemSettings /></Layout>} />
       </Routes>
     </BrowserRouter>
   );

@@ -104,11 +104,11 @@ using (var scope = app.Services.CreateScope())
     {
         // Add test users matching the roles specified in AuthController
         context.Users.AddRange(
-            new User { Username = "admin", FullName = "System Admin" },
-            new User { Username = "jmo_perera", FullName = "Dr. Perera (JMO)" },
-            new User { Username = "mo_silva", FullName = "Dr. Silva (MO)" },
-            new User { Username = "lab_fernando", FullName = "Mr. Fernando (Lab)" },
-            new User { Username = "clerk_jayasuriya", FullName = "Mrs. Jayasuriya (Clerk)" }
+            new User { Username = "admin", FullName = "System Admin", PasswordHash = "password123", Email = "admin@example.com" },
+            new User { Username = "jmo_perera", FullName = "Dr. Perera (JMO)", PasswordHash = "password123", Email = "jmo@example.com" },
+            new User { Username = "mo_silva", FullName = "Dr. Silva (MO)", PasswordHash = "password123", Email = "mo@example.com" },
+            new User { Username = "lab_fernando", FullName = "Mr. Fernando (Lab)", PasswordHash = "password123", Email = "lab@example.com" },
+            new User { Username = "clerk_jayasuriya", FullName = "Mrs. Jayasuriya (Clerk)", PasswordHash = "password123", Email = "clerk@example.com" }
         );
         context.SaveChanges();
     }

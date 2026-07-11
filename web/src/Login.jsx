@@ -33,7 +33,9 @@ const Login = () => {
       // Redirect to dashboard (SCR-002)
       navigate('/dashboard');
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.message) {
+      if (err.response && err.response.status === 423) {
+        setError('Account locked due to too many failed attempts. Please try again later or contact an administrator.');
+      } else if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {
         setError('Network error or server is unreachable. Is the backend running?');

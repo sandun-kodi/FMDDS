@@ -165,6 +165,39 @@ async function runTests() {
     failed++;
   }
 
+  // Test Case 4: Account Lockout (BRL-020)
+  try {
+    console.log('Test 4: Account Lockout (BRL-020)');
+    
+    // We will use the 'admin' account and intentionally fail login 5 times.
+    // 1. Five failed logins
+    for (let i = 0; i < 5; i++) {
+      const failRes = await fetch(`${BACKEND_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'admin', password: 'wrongpassword' })
+      });
+      assert(failRes.status === 401 || failRes.status === 423, `Failed attempt ${i + 1} processed`);
+    }
+
+    // 2. The 6th attempt should return 423 Locked out, even with the CORRECT password
+    const lockedRes = await fetch(`${BACKEND_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'admin', password: 'password123' })
+    });
+    
+    assert(lockedRes.status === 423, '6th attempt returns 423 Locked Out (even with correct password)');
+    const lockedData = await lockedRes.json();
+    assert(lockedData.message && lockedData.message.includes('locked'), 'Response message indicates lockout status');
+
+    console.log('  -> Test 4 Passed!\n');
+    passed++;
+  } catch (err) {
+    console.error('  ✗ Test 4 Failed:', err.message, '\n');
+    failed++;
+  }
+
   console.log('==================================================');
   console.log(`   TEST RUN SUMMARY: ${passed} Passed, ${failed} Failed`);
   console.log('==================================================');

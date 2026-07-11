@@ -36,8 +36,13 @@ namespace FMDDS.Data.Db
         // Report Entities
         public DbSet<MedicoLegalReport> MedicoLegalReports { get; set; }
 
-        // Audit
+        // Audit & Settings
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<SystemSetting> SystemSettings { get; set; }
+        public DbSet<LoginAttempt> LoginAttempts { get; set; }
+        public DbSet<LaboratoryTestType> LaboratoryTestTypes { get; set; }
+        public DbSet<CauseOfDeathRecord> CauseOfDeathRecords { get; set; }
+        public DbSet<Attachment> Attachments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -171,6 +176,43 @@ namespace FMDDS.Data.Db
             {
                 entity.ToTable("AuditLog");
                 entity.HasKey(e => e.AuditLogID);
+            });
+
+            // Configure SystemSetting
+            modelBuilder.Entity<SystemSetting>(entity =>
+            {
+                entity.ToTable("SystemSetting");
+                entity.HasKey(e => e.SettingID);
+                entity.HasIndex(e => e.SettingKey).IsUnique();
+            });
+
+            // Configure LoginAttempt
+            modelBuilder.Entity<LoginAttempt>(entity =>
+            {
+                entity.ToTable("LoginAttempt");
+                entity.HasKey(e => e.AttemptID);
+            });
+
+            // Configure LaboratoryTestType
+            modelBuilder.Entity<LaboratoryTestType>(entity =>
+            {
+                entity.ToTable("LaboratoryTestType");
+                entity.HasKey(e => e.TestTypeID);
+                entity.HasIndex(e => e.TestName).IsUnique();
+            });
+
+            // Configure CauseOfDeathRecord
+            modelBuilder.Entity<CauseOfDeathRecord>(entity =>
+            {
+                entity.ToTable("CauseOfDeathRecord");
+                entity.HasKey(e => e.CauseID);
+            });
+
+            // Configure Attachment
+            modelBuilder.Entity<Attachment>(entity =>
+            {
+                entity.ToTable("Attachment");
+                entity.HasKey(e => e.AttachmentID);
             });
 
             base.OnModelCreating(modelBuilder);
