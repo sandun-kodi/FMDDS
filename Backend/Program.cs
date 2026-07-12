@@ -98,17 +98,122 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    // context.Database.Migrate(); // Optional: Automatically apply migrations if needed
-    
-    if (!context.Users.Any())
+
+    // 1. Seed Roles
+    if (!context.Roles.Any())
     {
-        // Add test users matching the roles specified in AuthController
-        context.Users.AddRange(
-            new User { Username = "admin", FullName = "System Admin", PasswordHash = "password123", Email = "admin@example.com" },
-            new User { Username = "jmo_perera", FullName = "Dr. Perera (JMO)", PasswordHash = "password123", Email = "jmo@example.com" },
-            new User { Username = "mo_silva", FullName = "Dr. Silva (MO)", PasswordHash = "password123", Email = "mo@example.com" },
-            new User { Username = "lab_fernando", FullName = "Mr. Fernando (Lab)", PasswordHash = "password123", Email = "lab@example.com" },
-            new User { Username = "clerk_jayasuriya", FullName = "Mrs. Jayasuriya (Clerk)", PasswordHash = "password123", Email = "clerk@example.com" }
+        context.Roles.AddRange(
+            new Role { RoleName = "System Administrator", Description = "Full system access" },
+            new Role { RoleName = "Judicial Medical Officer", Description = "Senior forensic officer" },
+            new Role { RoleName = "Medical Officer", Description = "Clinical examinations" },
+            new Role { RoleName = "Laboratory Staff", Description = "Lab result entry" },
+            new Role { RoleName = "Clerical Staff", Description = "Case registration and admin" }
+        );
+        context.SaveChanges();
+    }
+
+    var adminRole  = context.Roles.First(r => r.RoleName == "System Administrator");
+    var jmoRole    = context.Roles.First(r => r.RoleName == "Judicial Medical Officer");
+    var moRole     = context.Roles.First(r => r.RoleName == "Medical Officer");
+    var labRole    = context.Roles.First(r => r.RoleName == "Laboratory Staff");
+    var clerkRole  = context.Roles.First(r => r.RoleName == "Clerical Staff");
+
+    // 2. Seed Permissions
+    if (!context.Permissions.Any())
+    {
+        context.Permissions.AddRange(
+            new Permission { PermissionKey = "user:manage",              Description = "Manage users" },
+            new Permission { PermissionKey = "admin:audit",              Description = "View audit logs" },
+            new Permission { PermissionKey = "admin:stats",              Description = "View system statistics" },
+            new Permission { PermissionKey = "case:create",              Description = "Create cases" },
+            new Permission { PermissionKey = "case:view_all",            Description = "View all cases" },
+            new Permission { PermissionKey = "case:edit",                Description = "Edit cases" },
+            new Permission { PermissionKey = "exam:record_clinical",     Description = "Record clinical exams" },
+            new Permission { PermissionKey = "exam:record_postmortem",   Description = "Record postmortem exams" },
+            new Permission { PermissionKey = "lab:request",              Description = "Request lab tests" },
+            new Permission { PermissionKey = "lab:result_write",         Description = "Write lab results" },
+            new Permission { PermissionKey = "evidence:manage",          Description = "Manage evidence" },
+            new Permission { PermissionKey = "report:approve",           Description = "Approve reports" },
+            new Permission { PermissionKey = "report:print",             Description = "Print reports" }
+        );
+        context.SaveChanges();
+    }
+
+    // 3. Seed RolePermissions
+    if (!context.RolePermissions.Any())
+    {
+        Permission P(string key) => context.Permissions.First(p => p.PermissionKey == key);
+
+        // System Administrator
+        context.RolePermissions.AddRange(
+            new RolePermission { RoleID = adminRole.RoleID, PermissionID = P("user:manage").PermissionID },
+            new RolePermission { RoleID = adminRole.RoleID, PermissionID = P("admin:audit").PermissionID },
+            new RolePermission { RoleID = adminRole.RoleID, PermissionID = P("admin:stats").PermissionID },
+            new RolePermission { RoleID = adminRole.RoleID, PermissionID = P("case:view_all").PermissionID }
+        );
+        // Judicial Medical Officer
+        context.RolePermissions.AddRange(
+            new RolePermission { RoleID = jmoRole.RoleID, PermissionID = P("case:create").PermissionID },
+            new RolePermission { RoleID = jmoRole.RoleID, PermissionID = P("case:view_all").PermissionID },
+            new RolePermission { RoleID = jmoRole.RoleID, PermissionID = P("case:edit").PermissionID },
+            new RolePermission { RoleID = jmoRole.RoleID, PermissionID = P("exam:record_clinical").PermissionID },
+            new RolePermission { RoleID = jmoRole.RoleID, PermissionID = P("exam:record_postmortem").PermissionID },
+            new RolePermission { RoleID = jmoRole.RoleID, PermissionID = P("lab:request").PermissionID },
+            new RolePermission { RoleID = jmoRole.RoleID, PermissionID = P("evidence:manage").PermissionID },
+            new RolePermission { RoleID = jmoRole.RoleID, PermissionID = P("report:approve").PermissionID },
+            new RolePermission { RoleID = jmoRole.RoleID, PermissionID = P("report:print").PermissionID }
+        );
+        // Medical Officer
+        context.RolePermissions.AddRange(
+            new RolePermission { RoleID = moRole.RoleID, PermissionID = P("case:view_all").PermissionID },
+            new RolePermission { RoleID = moRole.RoleID, PermissionID = P("exam:record_clinical").PermissionID },
+            new RolePermission { RoleID = moRole.RoleID, PermissionID = P("lab:request").PermissionID },
+            new RolePermission { RoleID = moRole.RoleID, PermissionID = P("report:print").PermissionID }
+        );
+        // Laboratory Staff
+        context.RolePermissions.AddRange(
+            new RolePermission { RoleID = labRole.RoleID, PermissionID = P("case:view_all").PermissionID },
+            new RolePermission { RoleID = labRole.RoleID, PermissionID = P("lab:result_write").PermissionID }
+        );
+        // Clerical Staff
+        context.RolePermissions.AddRange(
+            new RolePermission { RoleID = clerkRole.RoleID, PermissionID = P("case:create").PermissionID },
+            new RolePermission { RoleID = clerkRole.RoleID, PermissionID = P("case:view_all").PermissionID },
+            new RolePermission { RoleID = clerkRole.RoleID, PermissionID = P("case:edit").PermissionID },
+            new RolePermission { RoleID = clerkRole.RoleID, PermissionID = P("report:print").PermissionID }
+        );
+        context.SaveChanges();
+    }
+
+    // 4. Seed Users (with bcrypt hashes — "password123")
+    const string hash = "$2a$12$KkQZ6w0Y8mP3WJ4b2bH0UeN9rK1yE8S/d5QZ6H6u4Y7p5Wq.g.w4y";
+    User EnsureUser(string username, string fullName, string email)
+    {
+        var u = context.Users.FirstOrDefault(x => x.Username == username);
+        if (u == null)
+        {
+            u = new User { Username = username, FullName = fullName, Email = email, PasswordHash = hash, IsActive = true };
+            context.Users.Add(u);
+        }
+        else { u.PasswordHash = hash; u.IsActive = true; }
+        return u;
+    }
+    var uAdmin = EnsureUser("admin",            "System Admin",           "admin@fmdds.lk");
+    var uJmo   = EnsureUser("jmo_perera",       "Dr. Perera (JMO)",       "jmo@fmdds.lk");
+    var uMo    = EnsureUser("mo_silva",         "Dr. Silva (MO)",         "mo@fmdds.lk");
+    var uLab   = EnsureUser("lab_fernando",     "Mr. Fernando (Lab)",     "lab@fmdds.lk");
+    var uClerk = EnsureUser("clerk_jayasuriya", "Mrs. Jayasuriya (Clerk)","clerk@fmdds.lk");
+    context.SaveChanges();
+
+    // 5. Seed UserRoles
+    if (!context.UserRoles.Any())
+    {
+        context.UserRoles.AddRange(
+            new UserRole { UserID = uAdmin.UserID, RoleID = adminRole.RoleID },
+            new UserRole { UserID = uJmo.UserID,   RoleID = jmoRole.RoleID   },
+            new UserRole { UserID = uMo.UserID,    RoleID = moRole.RoleID    },
+            new UserRole { UserID = uLab.UserID,   RoleID = labRole.RoleID   },
+            new UserRole { UserID = uClerk.UserID, RoleID = clerkRole.RoleID }
         );
         context.SaveChanges();
     }

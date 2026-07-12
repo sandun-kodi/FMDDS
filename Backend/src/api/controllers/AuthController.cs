@@ -79,8 +79,20 @@ namespace FMDDS.API.Controllers
             user.LockoutEnd = null;
             await _dbContext.SaveChangesAsync();
 
-            // Map role and permissions based on username pattern (simplified for testing)
-            var (roleName, permissions) = GetRoleAndPermissions(user.Username);
+            // Load role and permissions dynamically from the database
+            var roles = await _dbContext.UserRoles
+                .Where(ur => ur.UserID == user.UserID)
+                .Select(ur => ur.Role)
+                .ToListAsync();
+
+            var roleName = roles.FirstOrDefault()?.RoleName ?? "User";
+            var roleIds = roles.Select(r => r.RoleID).ToList();
+
+            var permissions = await _dbContext.RolePermissions
+                .Where(rp => roleIds.Contains(rp.RoleID))
+                .Select(rp => rp.Permission.PermissionKey)
+                .Distinct()
+                .ToListAsync();
 
             var token = _tokenService.GenerateToken(user, roleName, permissions);
 
@@ -95,37 +107,6 @@ namespace FMDDS.API.Controllers
                     role = roleName
                 }
             });
-        }
-
-        private (string roleName, List<string> permissions) GetRoleAndPermissions(string username)
-        {
-            // Simplified role/permission mapping for seeded test users
-            return username.ToLower() switch
-            {
-                "admin" => ("System Administrator", new List<string>
-                {
-                    "admin:audit", "admin:stats", "user:manage"
-                }),
-                "jmo_perera" => ("Judicial Medical Officer", new List<string>
-                {
-                    "case:create", "case:view", "exam:record_clinical", "exam:record_postmortem",
-                    "lab:request", "evidence:manage", "report:approve", "report:print"
-                }),
-                "mo_silva" => ("Medical Officer", new List<string>
-                {
-                    "case:create", "case:view", "exam:record_clinical", "exam:record_postmortem",
-                    "lab:request", "report:print"
-                }),
-                "lab_fernando" => ("Laboratory Staff", new List<string>
-                {
-                    "lab:result_write", "lab:request"
-                }),
-                "clerk_jayasuriya" => ("Registration Clerk", new List<string>
-                {
-                    "case:create", "case:view"
-                }),
-                _ => ("User", new List<string>())
-            };
         }
     }
 

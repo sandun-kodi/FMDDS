@@ -44,6 +44,9 @@ async function runTests() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: 'admin', password: 'wrongpassword' })
     });
+    if (badRes.status !== 401) {
+        console.error("Test 1 Bad Login Failed. Status:", badRes.status, "Body:", await badRes.text());
+    }
     assert(badRes.status === 401, 'Invalid password returns 401 Unauthorized');
     
     console.log('  -> Test 1 Passed!\n');
