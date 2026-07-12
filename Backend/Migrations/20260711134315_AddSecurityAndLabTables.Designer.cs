@@ -3,6 +3,7 @@ using System;
 using FMDDS.Data.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260711134315_AddSecurityAndLabTables")]
+    partial class AddSecurityAndLabTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -248,23 +251,6 @@ namespace backend.Migrations
                     b.ToTable("ClinicalExamination", (string)null);
                 });
 
-            modelBuilder.Entity("FMDDS.Data.Entities.Department", b =>
-                {
-                    b.Property<int>("DepartmentID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DepartmentID"));
-
-                    b.Property<string>("DepartmentName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("DepartmentID");
-
-                    b.ToTable("Department", (string)null);
-                });
-
             modelBuilder.Entity("FMDDS.Data.Entities.Evidence", b =>
                 {
                     b.Property<int>("EvidenceID")
@@ -454,34 +440,6 @@ namespace backend.Migrations
                     b.ToTable("MedicoLegalReport", (string)null);
                 });
 
-            modelBuilder.Entity("FMDDS.Data.Entities.Notification", b =>
-                {
-                    b.Property<int>("NotificationID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("NotificationID"));
-
-                    b.Property<DateTime>("CreatedTimestamp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UserID")
-                        .HasColumnType("integer");
-
-                    b.HasKey("NotificationID");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("Notification", (string)null);
-                });
-
             modelBuilder.Entity("FMDDS.Data.Entities.Patient", b =>
                 {
                     b.Property<int>("PatientID")
@@ -514,30 +472,6 @@ namespace backend.Migrations
                     b.HasKey("PatientID");
 
                     b.ToTable("Patient", (string)null);
-                });
-
-            modelBuilder.Entity("FMDDS.Data.Entities.Permission", b =>
-                {
-                    b.Property<int>("PermissionID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PermissionID"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PermissionKey")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("PermissionID");
-
-                    b.HasIndex("PermissionKey")
-                        .IsUnique();
-
-                    b.ToTable("Permission", (string)null);
                 });
 
             modelBuilder.Entity("FMDDS.Data.Entities.PostmortemExamination", b =>
@@ -589,45 +523,6 @@ namespace backend.Migrations
                     b.HasKey("ReferralSourceTypeID");
 
                     b.ToTable("ReferralSourceTypes");
-                });
-
-            modelBuilder.Entity("FMDDS.Data.Entities.Role", b =>
-                {
-                    b.Property<int>("RoleID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RoleID"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("RoleID");
-
-                    b.HasIndex("RoleName")
-                        .IsUnique();
-
-                    b.ToTable("Role", (string)null);
-                });
-
-            modelBuilder.Entity("FMDDS.Data.Entities.RolePermission", b =>
-                {
-                    b.Property<int>("RoleID")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("PermissionID")
-                        .HasColumnType("integer");
-
-                    b.HasKey("RoleID", "PermissionID");
-
-                    b.HasIndex("PermissionID");
-
-                    b.ToTable("RolePermission", (string)null);
                 });
 
             modelBuilder.Entity("FMDDS.Data.Entities.SystemSetting", b =>
@@ -703,21 +598,6 @@ namespace backend.Migrations
                         .IsUnique();
 
                     b.ToTable("User", (string)null);
-                });
-
-            modelBuilder.Entity("FMDDS.Data.Entities.UserRole", b =>
-                {
-                    b.Property<int>("UserID")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RoleID")
-                        .HasColumnType("integer");
-
-                    b.HasKey("UserID", "RoleID");
-
-                    b.HasIndex("RoleID");
-
-                    b.ToTable("UserRole", (string)null);
                 });
 
             modelBuilder.Entity("FMDDS.Data.Entities.Ward", b =>
@@ -924,17 +804,6 @@ namespace backend.Migrations
                     b.Navigation("Case");
                 });
 
-            modelBuilder.Entity("FMDDS.Data.Entities.Notification", b =>
-                {
-                    b.HasOne("FMDDS.Data.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("FMDDS.Data.Entities.PostmortemExamination", b =>
                 {
                     b.HasOne("FMDDS.Data.Entities.Case", "Case")
@@ -954,25 +823,6 @@ namespace backend.Migrations
                     b.Navigation("Examiner");
                 });
 
-            modelBuilder.Entity("FMDDS.Data.Entities.RolePermission", b =>
-                {
-                    b.HasOne("FMDDS.Data.Entities.Permission", "Permission")
-                        .WithMany()
-                        .HasForeignKey("PermissionID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FMDDS.Data.Entities.Role", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Permission");
-
-                    b.Navigation("Role");
-                });
-
             modelBuilder.Entity("FMDDS.Data.Entities.SystemSetting", b =>
                 {
                     b.HasOne("FMDDS.Data.Entities.User", "LastUpdatedBy")
@@ -980,25 +830,6 @@ namespace backend.Migrations
                         .HasForeignKey("LastUpdatedByID");
 
                     b.Navigation("LastUpdatedBy");
-                });
-
-            modelBuilder.Entity("FMDDS.Data.Entities.UserRole", b =>
-                {
-                    b.HasOne("FMDDS.Data.Entities.Role", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FMDDS.Data.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FMDDS.Data.Entities.Ward", b =>

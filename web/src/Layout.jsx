@@ -10,7 +10,9 @@ import {
   FlaskConical, 
   FolderLock, 
   LogOut,
-  Bell
+  Bell,
+  Settings,
+  Paperclip
 } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -31,7 +33,9 @@ const Layout = ({ children }) => {
     { name: 'Clinical Exam', path: '/exams/clinical', icon: <ClipboardList size={18} /> },
     { name: 'Postmortem Exam', path: '/exams/postmortem', icon: <FolderLock size={18} /> },
     { name: 'Lab Investigations', path: '/lab', icon: <FlaskConical size={18} /> },
-    { name: 'Search Cases', path: '/search', icon: <FileSearch size={18} /> }
+    { name: 'Document Attachments', path: '/documents', icon: <Paperclip size={18} /> },
+    { name: 'Search Cases', path: '/search', icon: <FileSearch size={18} /> },
+    { name: 'System Settings', path: '/settings', icon: <Settings size={18} /> }
   ];
 
   return (

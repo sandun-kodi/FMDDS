@@ -36,8 +36,21 @@ namespace FMDDS.Data.Db
         // Report Entities
         public DbSet<MedicoLegalReport> MedicoLegalReports { get; set; }
 
-        // Audit
+        // Audit & Settings
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<SystemSetting> SystemSettings { get; set; }
+        public DbSet<LoginAttempt> LoginAttempts { get; set; }
+        public DbSet<LaboratoryTestType> LaboratoryTestTypes { get; set; }
+        public DbSet<CauseOfDeathRecord> CauseOfDeathRecords { get; set; }
+        public DbSet<Attachment> Attachments { get; set; }
+
+        // Security and Extras
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -173,7 +186,113 @@ namespace FMDDS.Data.Db
                 entity.HasKey(e => e.AuditLogID);
             });
 
+            // Configure SystemSetting
+            modelBuilder.Entity<SystemSetting>(entity =>
+            {
+                entity.ToTable("SystemSetting");
+                entity.HasKey(e => e.SettingID);
+                entity.HasIndex(e => e.SettingKey).IsUnique();
+            });
+
+            // Configure LoginAttempt
+            modelBuilder.Entity<LoginAttempt>(entity =>
+            {
+                entity.ToTable("LoginAttempt");
+                entity.HasKey(e => e.AttemptID);
+            });
+
+            // Configure LaboratoryTestType
+            modelBuilder.Entity<LaboratoryTestType>(entity =>
+            {
+                entity.ToTable("LaboratoryTestType");
+                entity.HasKey(e => e.TestTypeID);
+                entity.HasIndex(e => e.TestName).IsUnique();
+            });
+
+            // Configure CauseOfDeathRecord
+            modelBuilder.Entity<CauseOfDeathRecord>(entity =>
+            {
+                entity.ToTable("CauseOfDeathRecord");
+                entity.HasKey(e => e.CauseID);
+            });
+
+            // Configure Attachment
+            modelBuilder.Entity<Attachment>(entity =>
+            {
+                entity.ToTable("Attachment");
+                entity.HasKey(e => e.AttachmentID);
+            });
+
             base.OnModelCreating(modelBuilder);
+
+            // Configure Role
+            modelBuilder.Entity<Role>(entity =>
+            {
+                entity.ToTable("Role");
+                entity.HasKey(e => e.RoleID);
+                entity.HasIndex(e => e.RoleName).IsUnique();
+            });
+
+            // Configure Permission
+            modelBuilder.Entity<Permission>(entity =>
+            {
+                entity.ToTable("Permission");
+                entity.HasKey(e => e.PermissionID);
+                entity.HasIndex(e => e.PermissionKey).IsUnique();
+            });
+
+            // Configure UserRole
+            modelBuilder.Entity<UserRole>(entity =>
+            {
+                entity.ToTable("UserRole");
+                entity.HasKey(e => new { e.UserID, e.RoleID });
+
+                entity.HasOne(d => d.User)
+                    .WithMany()
+                    .HasForeignKey(d => d.UserID)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.Role)
+                    .WithMany()
+                    .HasForeignKey(d => d.RoleID)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure RolePermission
+            modelBuilder.Entity<RolePermission>(entity =>
+            {
+                entity.ToTable("RolePermission");
+                entity.HasKey(e => new { e.RoleID, e.PermissionID });
+
+                entity.HasOne(d => d.Role)
+                    .WithMany()
+                    .HasForeignKey(d => d.RoleID)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.Permission)
+                    .WithMany()
+                    .HasForeignKey(d => d.PermissionID)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Configure Department
+            modelBuilder.Entity<Department>(entity =>
+            {
+                entity.ToTable("Department");
+                entity.HasKey(e => e.DepartmentID);
+            });
+
+            // Configure Notification
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.ToTable("Notification");
+                entity.HasKey(e => e.NotificationID);
+
+                entity.HasOne(d => d.User)
+                    .WithMany()
+                    .HasForeignKey(d => d.UserID)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }
