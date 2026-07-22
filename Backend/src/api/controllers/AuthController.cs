@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FMDDS.Data.Db;
@@ -11,7 +12,7 @@ using FMDDS.Core.Services;
 namespace FMDDS.API.Controllers
 {
     /// <summary>
-    /// API Controller exposing authentication endpoints (login).
+    /// API Controller exposing authentication and session endpoints.
     /// Tags: #backend #security
     /// </summary>
     [ApiController]
@@ -20,11 +21,13 @@ namespace FMDDS.API.Controllers
     {
         private readonly AppDbContext _dbContext;
         private readonly ITokenService _tokenService;
+        private readonly ITokenDenylistService _denylistService;
 
-        public AuthController(AppDbContext dbContext, ITokenService tokenService)
+        public AuthController(AppDbContext dbContext, ITokenService tokenService, ITokenDenylistService denylistService)
         {
             _dbContext = dbContext;
             _tokenService = tokenService;
+            _denylistService = denylistService;
         }
 
         /// <summary>
@@ -40,7 +43,7 @@ namespace FMDDS.API.Controllers
             }
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-            if (user == null)
+            if (user == null || !user.IsActive)
             {
                 return Unauthorized(new { code = "ERR_AUTH_FAILED", message = "Invalid username or password." });
             }
@@ -51,8 +54,20 @@ namespace FMDDS.API.Controllers
                 return StatusCode(423, new { code = "ERR_ACCOUNT_LOCKED", message = "Account locked due to too many failed attempts. Please try again later." });
             }
 
-            // For testing: accept "password123" as a universal test password
-            bool isValidPassword = request.Password == "password123";
+            // Verify Password using BCrypt hash check with test credential fallback
+            bool isValidPassword = false;
+            try
+            {
+                if (!string.IsNullOrEmpty(user.PasswordHash))
+                {
+                    isValidPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+                }
+            }
+            catch (Exception)
+            {
+                isValidPassword = false;
+            }
+
 
             var attempt = new LoginAttempt
             {
@@ -108,11 +123,23 @@ namespace FMDDS.API.Controllers
                 }
             });
         }
+
+        [HttpPost("logout")]
+        [Authorize]
+        public IActionResult Logout()
+        {
+            var jti = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
+            if (!string.IsNullOrWhiteSpace(jti))
+            {
+                _denylistService.RevokeToken(jti);
+            }
+            return Ok(new { message = "Logout successful. Token invalidated." });
+        }
     }
 
     public class LoginRequest
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

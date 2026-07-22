@@ -26,11 +26,12 @@ namespace FMDDS.Core.Services
         {
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var secretKey = _config["JwtSettings:SecretKey"] ?? "FMDDS_SUPER_SECRET_KEY_THAT_NEEDS_TO_BE_AT_LEAST_32_CHARS_LONG";
+            var secretKey = _config["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JwtSettings:SecretKey is required.");
             var key = Encoding.UTF8.GetBytes(secretKey);
 
             var claims = new List<Claim>
             {
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(ClaimTypes.NameIdentifier, user.UserID.ToString()),
                 new Claim(ClaimTypes.Name, user.FullName),
                 new Claim("username", user.Username),

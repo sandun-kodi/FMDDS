@@ -88,14 +88,15 @@ namespace FMDDS.Core.Services
 
             // State Machine Check: If all lab requests for this case are completed, move case to 'Report Preparation'
             var targetCase = await _caseRepo.GetByIdAsync(labReq.CaseID);
-            var allCaseRequests = await _labRequestRepo.FindAsync(r => r.CaseID == targetCase.CaseID);
-            
-            bool allCompleted = allCaseRequests.All(r => r.Status == "Completed" || r.LabRequestID == labRequestID);
-            
-            if (allCompleted)
+            if (targetCase != null)
             {
-                targetCase.Status = "Report Preparation";
-                _caseRepo.Update(targetCase);
+                var allCaseRequests = await _labRequestRepo.FindAsync(r => r.CaseID == targetCase.CaseID);
+                bool allCompleted = allCaseRequests.All(r => r.Status == "Completed" || r.LabRequestID == labRequestID);
+                if (allCompleted)
+                {
+                    targetCase.Status = "Report Preparation";
+                    _caseRepo.Update(targetCase);
+                }
             }
 
             var audit = new AuditLog
