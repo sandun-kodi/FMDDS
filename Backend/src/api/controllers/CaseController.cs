@@ -7,7 +7,7 @@ using FMDDS.Core.Services;
 namespace FMDDS.API.Controllers
 {
     /// <summary>
-    /// API Controller exposing Case intake and tracking REST endpoints.
+    /// API Controller exposing Case intake, retrieval, and status REST endpoints.
     /// Tags: #backend #security
     /// </summary>
     [ApiController]
@@ -19,6 +19,34 @@ namespace FMDDS.API.Controllers
         public CaseController(CaseService caseService)
         {
             _caseService = caseService;
+        }
+
+        /// <summary>
+        /// Retrieves a paginated/filtered list of cases.
+        /// Route: GET /api/v1/cases
+        /// </summary>
+        [HttpGet]
+        [PermissionAuthorize("case:view_all")]
+        public async Task<IActionResult> GetCases([FromQuery] string? status, [FromQuery] string? caseType, [FromQuery] string? nic)
+        {
+            var cases = await _caseService.GetAllCasesAsync(status, caseType, nic);
+            return Ok(cases);
+        }
+
+        /// <summary>
+        /// Retrieves a single case by ID.
+        /// Route: GET /api/v1/cases/{id}
+        /// </summary>
+        [HttpGet("{id}")]
+        [PermissionAuthorize("case:view_all")]
+        public async Task<IActionResult> GetCaseById(int id)
+        {
+            var targetCase = await _caseService.GetCaseByIdAsync(id);
+            if (targetCase == null)
+            {
+                return NotFound(new { message = $"Case with ID {id} not found." });
+            }
+            return Ok(targetCase);
         }
 
         /// <summary>
@@ -36,14 +64,13 @@ namespace FMDDS.API.Controllers
 
             try
             {
-                var newCase = await _caseService.CreateCaseAsync(
+                var newCase = await _caseService.RegisterCaseAsync(
                     request.PatientID,
                     request.CaseType,
-                    request.ReferralSource,
-                    request.ReferralSourceTypeID,
-                    request.AssignedOfficerID,
                     request.HospitalID,
-                    request.WardID
+                    request.WardID,
+                    request.ReferralSourceTypeID,
+                    request.AssignedOfficerID
                 );
 
                 return Created($"/api/v1/cases/{newCase.CaseID}", newCase);
@@ -57,19 +84,50 @@ namespace FMDDS.API.Controllers
                 return StatusCode(500, new { code = "ERR_INTERNAL_SERVER", message = "An error occurred while creating the case." });
             }
         }
+
+        /// <summary>
+        /// Updates the status of an existing case.
+        /// Route: PUT /api/v1/cases/{id}/status
+        /// </summary>
+        [HttpPut("{id}/status")]
+        [PermissionAuthorize("case:edit")]
+        public async Task<IActionResult> UpdateCaseStatus(int id, [FromBody] UpdateStatusRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Status))
+            {
+                return BadRequest(new { message = "Target status is required." });
+            }
+
+            try
+            {
+                var updatedCase = await _caseService.UpdateCaseStatusAsync(id, request.Status, request.OfficerID);
+                return Ok(updatedCase);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { code = "ERR_VALIDATION_FAILED", message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { code = "ERR_CASE_STATE", message = ex.Message });
+            }
+        }
     }
 
-    /// <summary>
-    /// Data Transfer Object representing case registration request body.
-    /// </summary>
     public class CreateCaseRequest
     {
         public int PatientID { get; set; }
-        public string CaseType { get; set; }
-        public string ReferralSource { get; set; }
+        public string CaseType { get; set; } = string.Empty;
+        public string ReferralSource { get; set; } = string.Empty;
         public int? ReferralSourceTypeID { get; set; }
         public int? AssignedOfficerID { get; set; }
         public int? HospitalID { get; set; }
         public int? WardID { get; set; }
+    }
+
+    public class UpdateStatusRequest
+    {
+        public string Status { get; set; } = string.Empty;
+        public int OfficerID { get; set; }
     }
 }

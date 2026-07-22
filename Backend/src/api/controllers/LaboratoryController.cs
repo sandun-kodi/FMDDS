@@ -54,14 +54,30 @@ namespace FMDDS.API.Controllers
         }
 
         /// <summary>
-        /// Posts results to an existing laboratory request.
+        /// Posts results to an existing laboratory request (POST route).
         /// Route: POST /api/v1/lab-requests/{requestId}/results
         /// </summary>
         [HttpPost("lab-requests/{requestId}/results")]
         [PermissionAuthorize("lab:result_write")] // Laboratory Staff only
         public async Task<IActionResult> PostLabResult(int requestId, [FromBody] PostLabResultDto request)
         {
-            if (string.IsNullOrWhiteSpace(request.ResultText))
+            return await HandlePostLabResult(requestId, request);
+        }
+
+        /// <summary>
+        /// Posts/updates results to an existing laboratory request (PUT route matching REST contract).
+        /// Route: PUT /api/v1/lab-requests/{requestId}/results
+        /// </summary>
+        [HttpPut("lab-requests/{requestId}/results")]
+        [PermissionAuthorize("lab:result_write")] // Laboratory Staff only
+        public async Task<IActionResult> PutLabResult(int requestId, [FromBody] PostLabResultDto request)
+        {
+            return await HandlePostLabResult(requestId, request);
+        }
+
+        private async Task<IActionResult> HandlePostLabResult(int requestId, PostLabResultDto request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.ResultText))
             {
                 return BadRequest(new { message = "Result text cannot be empty." });
             }
@@ -90,6 +106,6 @@ namespace FMDDS.API.Controllers
     public class PostLabResultDto
     {
         public int LabStaffID { get; set; }
-        public string ResultText { get; set; }
+        public string ResultText { get; set; } = string.Empty;
     }
 }

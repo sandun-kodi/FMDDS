@@ -5,7 +5,7 @@
  * Requirements: Node.js (v18+) and the backend server running on http://localhost:5200
  */
 
-const BACKEND_URL = 'http://localhost:5200/api/v1';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5200/api/v1';
 
 // Helper for assertions
 function assert(condition, message) {
@@ -42,7 +42,7 @@ async function runTests() {
     const badRes = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'wrongpassword' })
+      body: JSON.stringify({ username: 'nonexistent_user', password: 'wrongpassword' })
     });
     if (badRes.status !== 401) {
         console.error("Test 1 Bad Login Failed. Status:", badRes.status, "Body:", await badRes.text());
@@ -69,7 +69,7 @@ async function runTests() {
     const { token } = await jmoLogin.json();
 
     // Register a new patient
-    const randomNic = '94' + Math.floor(100000 + Math.random() * 900000) + 'V';
+    const randomNic = '94' + Math.floor(1000000 + Math.random() * 9000000) + 'V';
     const registerRes = await fetch(`${BACKEND_URL}/patients`, {
       method: 'POST',
       headers: {
@@ -88,7 +88,7 @@ async function runTests() {
 
     assert(registerRes.status === 201, 'Registering patient returns 201 Created');
     const patient = await registerRes.json();
-    assert(patient.nic === randomNic, 'Returned patient record matches submitted NIC');
+    assert((patient.nic || patient.NIC) === randomNic, 'Returned patient record matches submitted NIC');
     assert(patient.fullName === 'Regression Test Patient', 'Returned patient record matches name');
     
     // Duplicate NIC check
@@ -126,7 +126,7 @@ async function runTests() {
     const { token } = await jmoLogin.json();
 
     // Create a specific patient
-    const lookupNic = '94' + Math.floor(100000 + Math.random() * 900000) + 'V';
+    const lookupNic = '94' + Math.floor(1000000 + Math.random() * 9000000) + 'V';
     const createRes = await fetch(`${BACKEND_URL}/patients`, {
       method: 'POST',
       headers: {

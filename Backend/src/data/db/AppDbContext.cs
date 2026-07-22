@@ -15,6 +15,7 @@ namespace FMDDS.Data.Db
 
         // Core Entities
         public DbSet<Case> Cases { get; set; }
+        public DbSet<CaseNumberCounter> CaseNumberCounters { get; set; }
         public DbSet<Patient> Patients { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Hospital> Hospitals { get; set; }
@@ -54,6 +55,16 @@ namespace FMDDS.Data.Db
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Configure CaseNumberCounter
+            modelBuilder.Entity<CaseNumberCounter>(entity =>
+            {
+                entity.ToTable("CaseNumberCounters");
+                entity.HasKey(e => new { e.BranchCode, e.Year, e.CaseTypeCode });
+                entity.Property(e => e.BranchCode).HasMaxLength(10);
+                entity.Property(e => e.CaseTypeCode).HasMaxLength(10);
+                entity.Property(e => e.NextSequence).IsRequired();
+            });
+
             // Configure Case mapping
             modelBuilder.Entity<Case>(entity =>
             {

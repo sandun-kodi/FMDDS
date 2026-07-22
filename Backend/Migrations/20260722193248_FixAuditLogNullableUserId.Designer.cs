@@ -3,6 +3,7 @@ using System;
 using FMDDS.Data.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260722193248_FixAuditLogNullableUserId")]
+    partial class FixAuditLogNullableUserId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -143,27 +146,6 @@ namespace backend.Migrations
                     b.HasIndex("WardID");
 
                     b.ToTable("Case", (string)null);
-                });
-
-            modelBuilder.Entity("FMDDS.Data.Entities.CaseNumberCounter", b =>
-                {
-                    b.Property<string>("BranchCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("CaseTypeCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<int>("NextSequence")
-                        .HasColumnType("integer");
-
-                    b.HasKey("BranchCode", "Year", "CaseTypeCode");
-
-                    b.ToTable("CaseNumberCounters", (string)null);
                 });
 
             modelBuilder.Entity("FMDDS.Data.Entities.CauseOfDeathRecord", b =>
