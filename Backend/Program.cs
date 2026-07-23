@@ -246,13 +246,12 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
             context.SaveChanges();
         }
 
-        // 4. Seed Users (Safe Seeding: Requires explicit SeedData:InitialPassword; NEVER resets existing user credentials)
+        // 4. Seed Users (Safe Seeding: Creates missing users only and NEVER resets existing credentials)
         string? initPassword = builder.Configuration["SeedData:InitialPassword"] ?? builder.Configuration["DEV_INITIAL_PASSWORD"];
         if (string.IsNullOrWhiteSpace(initPassword))
         {
             throw new InvalidOperationException("FATAL: SeedData:InitialPassword must be configured in User Secrets or Environment Variables.");
         }
-
         string initialHash = BCrypt.Net.BCrypt.HashPassword(initPassword);
 
         User EnsureUser(string username, string fullName, string email)
