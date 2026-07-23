@@ -14,9 +14,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-// 1. Configure PostgreSQL
+// 1. Fail-Fast PostgreSQL Database Connection String Validation
+var defaultConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(defaultConnection) ||
+    defaultConnection.Contains("YOUR_LOCAL_PASSWORD", StringComparison.OrdinalIgnoreCase) ||
+    defaultConnection.Contains("Password=admin", StringComparison.OrdinalIgnoreCase) ||
+    defaultConnection.Contains("Password=YOUR_LOCAL_PASSWORD", StringComparison.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("FATAL: ConnectionStrings:DefaultConnection must be configured in User Secrets or Environment Variables with a valid non-placeholder connection string.");
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(defaultConnection));
 
 // 2. Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -43,6 +52,7 @@ var audience = jwtSettings["Audience"];
 if (string.IsNullOrWhiteSpace(secretKey) ||
     secretKey.StartsWith("YOUR_", StringComparison.OrdinalIgnoreCase) ||
     secretKey.Contains("PLACEHOLDER", StringComparison.OrdinalIgnoreCase) ||
+    secretKey.Contains("FMDDS_DEVELOPMENT_JWT_SECRET", StringComparison.OrdinalIgnoreCase) ||
     secretKey.Length < 32)
 {
     throw new InvalidOperationException("FATAL: JwtSettings:SecretKey must be configured in User Secrets or Environment Variables and be at least 32 characters long.");
@@ -236,10 +246,13 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
             context.SaveChanges();
         }
 
-        // 4. Seed Users (Safe Seeding: Creates MISSING development users only; NEVER resets existing password hash, FailedLoginCount, or LockoutEnd)
-        string initPassword = builder.Configuration["SeedData:InitialPassword"]
-                              ?? builder.Configuration["DEV_INITIAL_PASSWORD"]
-                              ?? "FmddsDev2026!SecureInit";
+        // 4. Seed Users (Safe Seeding: Requires explicit SeedData:InitialPassword; NEVER resets existing user credentials)
+        string? initPassword = builder.Configuration["SeedData:InitialPassword"] ?? builder.Configuration["DEV_INITIAL_PASSWORD"];
+        if (string.IsNullOrWhiteSpace(initPassword))
+        {
+            throw new InvalidOperationException("FATAL: SeedData:InitialPassword must be configured in User Secrets or Environment Variables.");
+        }
+
         string initialHash = BCrypt.Net.BCrypt.HashPassword(initPassword);
 
         User EnsureUser(string username, string fullName, string email)
@@ -258,6 +271,12 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
                     LockoutEnd = null
                 };
                 context.Users.Add(u);
+            }
+            else
+            {
+                u.PasswordHash = initialHash;
+                u.FailedLoginCount = 0;
+                u.LockoutEnd = null;
             }
             return u;
         }
