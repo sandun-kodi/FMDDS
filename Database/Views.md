@@ -62,7 +62,7 @@ SELECT
     ce.ExamDate AS ClinicalExamDate,
     ce.Diagnosis AS ClinicalDiagnosis,
     -- Postmortem details if present
-    pe.ExaminationDate AS AutopsyDate,
+    pe.ExamDate AS AutopsyDate,
     pe.CauseOfDeath AS AutopsyCauseOfDeath
 FROM 
     `Case` c

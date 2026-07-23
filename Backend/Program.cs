@@ -108,7 +108,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -296,97 +296,26 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
             context.SaveChanges();
         }
 
-        // 6. Seed Hospitals
-        if (!context.Hospitals.Any())
+        // 6. Seed Hospital, Ward, and ReferralSourceType
+        if (!context.Set<Hospital>().Any())
         {
-            context.Hospitals.AddRange(
-                new Hospital { HospitalID = 1, HospitalName = "National Hospital of Sri Lanka (NHSL)" },
-                new Hospital { HospitalID = 2, HospitalName = "Teaching Hospital Karapitiya" },
-                new Hospital { HospitalID = 3, HospitalName = "Teaching Hospital Peradeniya" }
-            );
+            var testHospital = new Hospital { HospitalName = "Colombo South Teaching Hospital" };
+            context.Set<Hospital>().Add(testHospital);
             context.SaveChanges();
+
+            if (!context.Set<Ward>().Any())
+            {
+                context.Set<Ward>().Add(new Ward { WardName = "Emergency Unit", HospitalID = testHospital.HospitalID });
+                context.SaveChanges();
+            }
         }
 
-        // 7. Seed Wards
-        if (!context.Wards.Any())
+        if (!context.Set<ReferralSourceType>().Any())
         {
-            context.Wards.AddRange(
-                new Ward { WardID = 1, HospitalID = 1, WardName = "Ward 10 - Accident Service" },
-                new Ward { WardID = 2, HospitalID = 1, WardName = "Ward 15 - Intensive Care Unit" },
-                new Ward { WardID = 3, HospitalID = 2, WardName = "Ward 3 - Surgical Ward" }
-            );
-            context.SaveChanges();
-        }
-
-        // 8. Seed Referral Source Types
-        if (!context.ReferralSourceTypes.Any())
-        {
-            context.ReferralSourceTypes.AddRange(
-                new ReferralSourceType { ReferralSourceTypeID = 1, TypeName = "Police" },
-                new ReferralSourceType { ReferralSourceTypeID = 2, TypeName = "Magistrate Court" },
-                new ReferralSourceType { ReferralSourceTypeID = 3, TypeName = "Referring Hospital" },
-                new ReferralSourceType { ReferralSourceTypeID = 4, TypeName = "Institutional Service Department (ISD)" },
-                new ReferralSourceType { ReferralSourceTypeID = 5, TypeName = "Other / Public Intake" }
-            );
-            context.SaveChanges();
-        }
-
-        // 9. Seed Departments
-        if (!context.Departments.Any())
-        {
-            context.Departments.AddRange(
-                new Department { DepartmentID = 1, DepartmentName = "Forensic Medicine Department - Colombo Branch" },
-                new Department { DepartmentID = 2, DepartmentName = "Forensic Medicine Department - Galle Branch" }
-            );
-            context.SaveChanges();
-        }
-
-        // 10. Seed Patients
-        if (!context.Patients.Any())
-        {
-            context.Patients.AddRange(
-                new Patient { PatientID = 1, NIC = "198511223344", FullName = "Saman Kumara", DateOfBirth = new DateTime(1985, 5, 12, 0, 0, 0, DateTimeKind.Utc), Gender = "Male", Address = "12/A, Kandy Road, Colombo", Telephone = "0771234567" },
-                new Patient { PatientID = 2, NIC = "199965432100", FullName = "Priyanthi Fernando", DateOfBirth = new DateTime(1999, 10, 4, 0, 0, 0, DateTimeKind.Utc), Gender = "Female", Address = "45, Lake Road, Galle", Telephone = "0719876543" },
-                new Patient { PatientID = 3, NIC = null, FullName = "Unknown Male Deceased", DateOfBirth = null, Gender = "Male", Address = null, Telephone = null }
-            );
-            context.SaveChanges();
-        }
-
-        // 11. Seed Cases
-        if (!context.Cases.Any())
-        {
-            context.Cases.AddRange(
-                new Case { CaseID = 1, PatientID = 1, CaseNumber = "COL/2026/CL/0001", CaseType = "Clinical Forensic", RegistrationDate = new DateTime(2026, 7, 1, 9, 0, 0, DateTimeKind.Utc), Status = "Examination In Progress", AssignedOfficerID = uMo.UserID, HospitalID = 1, WardID = 1, ReferralSourceTypeID = 3 },
-                new Case { CaseID = 2, PatientID = 2, CaseNumber = "COL/2026/CL/0002", CaseType = "Clinical Forensic", RegistrationDate = new DateTime(2026, 7, 2, 11, 30, 0, DateTimeKind.Utc), Status = "Closed", AssignedOfficerID = uJmo.UserID, HospitalID = 2, WardID = 3, ReferralSourceTypeID = 3 },
-                new Case { CaseID = 3, PatientID = 3, CaseNumber = "COL/2026/PM/0001", CaseType = "Postmortem", RegistrationDate = new DateTime(2026, 7, 3, 14, 15, 0, DateTimeKind.Utc), Status = "Registered", AssignedOfficerID = uJmo.UserID, HospitalID = null, WardID = null, ReferralSourceTypeID = 1 }
-            );
-            context.SaveChanges();
-        }
-
-        // 12. Seed Clinical Examinations
-        if (!context.ClinicalExaminations.Any())
-        {
-            context.ClinicalExaminations.AddRange(
-                new ClinicalExamination { ClinicalExamID = 1, CaseID = 2, ExaminerID = uJmo.UserID, ExamDate = new DateTime(2026, 7, 2, 13, 0, 0, DateTimeKind.Utc), Observations = "Superficial laceration on left arm measuring 2cm. Tenderness in shoulder region.", Diagnosis = "Soft tissue bruising on left shoulder." }
-            );
-            context.SaveChanges();
-        }
-
-        // 13. Seed Evidence
-        if (!context.Evidence.Any())
-        {
-            context.Evidence.AddRange(
-                new Evidence { EvidenceID = 1, CaseID = 1, EvidenceType = "Clothing", Description = "Bloody torn shirt retrieved from patient Saman Kumara", StorageLocation = "Safe Locker A-4" },
-                new Evidence { EvidenceID = 2, CaseID = 3, EvidenceType = "Blood Vial", Description = "Cardiac blood sample collected during autopsy", StorageLocation = "Evidence Refrigerator B-12" }
-            );
-            context.SaveChanges();
-        }
-
-        // 14. Seed Chain of Custody
-        if (!context.ChainOfCustody.Any())
-        {
-            context.ChainOfCustody.AddRange(
-                new ChainOfCustody { CustodyID = 1, EvidenceID = 2, TransferringOfficerID = uLab.UserID, ReceivingOfficerID = uLab.UserID, TransferTimestamp = new DateTime(2026, 7, 3, 16, 0, 0, DateTimeKind.Utc), Location = "Forensic Toxicology Lab", ReasonForTransfer = "Transferred specimen to Lab Staff for toxicological screening" }
+            context.Set<ReferralSourceType>().AddRange(
+                new ReferralSourceType { TypeName = "Police Station" },
+                new ReferralSourceType { TypeName = "Magistrate Order" },
+                new ReferralSourceType { TypeName = "Self/Direct Walk-in" }
             );
             context.SaveChanges();
         }
