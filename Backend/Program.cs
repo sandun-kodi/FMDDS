@@ -239,7 +239,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         // 4. Seed Users (Safe Seeding: Creates MISSING development users only; NEVER resets existing password hash, FailedLoginCount, or LockoutEnd)
         string initPassword = builder.Configuration["SeedData:InitialPassword"]
                               ?? builder.Configuration["DEV_INITIAL_PASSWORD"]
-                              ?? "FmddsDev2026!SecureInit";
+                              ?? "password123";
         string initialHash = BCrypt.Net.BCrypt.HashPassword(initPassword);
 
         User EnsureUser(string username, string fullName, string email)
