@@ -10,7 +10,7 @@ The backend is built on **.NET 8 Web API** and is located in the `Backend/` dire
 ### Database Configuration (PostgreSQL)
 * **Server Address:** `localhost:5432`
 * **Database Name:** `fmdds_db`
-* **Username:** `fmdds_app` (configured locally via ASP.NET Core User Secrets)
+* **Username:** `postgres` (configured locally via ASP.NET Core User Secrets)
 * **Migrations:** Generated and applied via Entity Framework Core (`InitialCreate`).
 * **Seeded Test Users:**
 

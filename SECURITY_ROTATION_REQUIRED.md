@@ -9,16 +9,18 @@ This document details mandatory security rotation steps for the FMDDS environmen
 The following credential items were previously committed, logged, or exposed in shell execution history and MUST be treated as compromised:
 
 1. **PostgreSQL Superuser (`postgres`) Password**: Exposed in shell transcripts.
-2. **Application Database Role (`fmdds_app`) Password**: Exposed in plain text configuration files.
-3. **JWT Signing Key**: Hardcoded development secrets previously committed to `appsettings.json`.
-4. **Initial User Seed Password**: Static fallback seed password (`password123`).
-5. **Active JWT Session Tokens**: Tokens issued using the former committed JWT secret.
+2. **JWT Signing Key**: Hardcoded development secrets previously committed to `appsettings.json`.
+3. **Initial User Seed Password**: Static fallback seed password (`password123`).
+4. **Active JWT Session Tokens**: Tokens issued using the former committed JWT secret.
+
+> [!NOTE]
+> The custom database role `fmdds_app` has been removed from local database setup in favor of standardizing local development on each developer's local `postgres` user.
 
 ---
 
 ## 2. Interactive PostgreSQL Superuser Password Rotation Procedure
 
-To avoid recording the new superuser password in shell history files (`ConsoleHost_history.txt`), execute the rotation interactively using `psql` password prompts:
+To avoid recording the superuser password in shell history files (`ConsoleHost_history.txt`), execute the rotation interactively using `psql` password prompts:
 
 ### Step A: Connect Interactively
 ```powershell
@@ -34,30 +36,25 @@ Inside the `psql` interactive console, execute:
 * `psql` will prompt for the new password twice without displaying characters on screen.
 * **Do NOT** execute `ALTER ROLE postgres WITH PASSWORD 'literal_secret'` directly in shell scripts.
 
-### Step C: Secure Storage
-Store the newly created `postgres` superuser password strictly in an encrypted password manager.  
-**Do NOT** place the `postgres` superuser credentials in ASP.NET Core User Secrets or application configuration files. The application backend must connect using the dedicated `fmdds_app` role.
-
----
-
-## 3. Application Database Role (`fmdds_app`) Configuration
-
-Set the rotated `fmdds_app` connection string locally using ASP.NET Core User Secrets:
+### Step C: Local User Secrets Configuration
+Set the local development connection string using ASP.NET Core User Secrets (with your rotated local `postgres` password):
 
 ```powershell
 $dotnet = "$env:USERPROFILE\.dotnet\dotnet.exe"
 
 & $dotnet user-secrets set `
   "ConnectionStrings:DefaultConnection" `
-  "Host=localhost;Port=5432;Database=fmdds_db;Username=fmdds_app;Password=<LOCAL_FMDDS_APP_PASSWORD>" `
+  "Host=localhost;Port=5432;Database=fmdds_db;Username=postgres;Password=<YOUR_LOCAL_POSTGRES_PASSWORD>" `
   --project .\Backend\backend.csproj
 ```
 
 ---
 
-## 4. JWT Key and Initial Seed Password Configuration
+## 3. JWT Key and Initial Seed Password Configuration
 
 ```powershell
+$dotnet = "$env:USERPROFILE\.dotnet\dotnet.exe"
+
 & $dotnet user-secrets set `
   "JwtSettings:SecretKey" `
   "<GENERATE_RANDOM_32_BYTE_STRING>" `

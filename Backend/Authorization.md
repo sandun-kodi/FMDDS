@@ -51,7 +51,9 @@ Every incoming request must be evaluated by an authorization middleware that ver
 
 To enforce the Principle of Least Privilege (`NFR-005`), the database engine must define different database users to limit direct connection access:
 
-1. **`fmdds_app` (Application Server User)**:
+> **Local Development Note**: Local developers connect using the `postgres` superuser for simplicity. The roles below describe the target production configuration. Automated tests always use `fmdds_test_runner` against `fmdds_test`.
+
+1. **`fmdds_app` (Production Application Server User)**:
    * **Privileges**: `SELECT`, `INSERT`, `UPDATE` on tables. `EXECUTE` on views/procedures.
    * **Restricted**: No `DELETE` operations permitted on core case files, examinations, or audit logs (`BRL-022`). No schema modification privileges (DDL).
 2. **`fmdds_migration` (Deploy User)**:

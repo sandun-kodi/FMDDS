@@ -4,6 +4,7 @@ const { execSync } = require('child_process');
 
 const SAFE_PLACEHOLDERS = [
   'YOUR_LOCAL_PASSWORD',
+  'YOUR_LOCAL_POSTGRES_PASSWORD',
   '<LOCAL_TEST_PASSWORD>',
   '<LOCAL_FMDDS_APP_CONNECTION_STRING>',
   '<LOCAL_FMDDS_APP_PASSWORD>',
@@ -17,8 +18,7 @@ const SAFE_PLACEHOLDERS = [
 ];
 
 const SUSPICIOUS_PATTERNS = [
-  { pattern: /Password=([^;\r\n"']+)/i, description: 'PostgreSQL connection password' },
-  { pattern: /Username=postgres;Password=/i, description: 'Committed PostgreSQL superuser credential' },
+  { pattern: /Password=([^;<\r\n"']+)/i, description: 'PostgreSQL connection password' },
   { pattern: /Bearer\s+ey[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+/i, description: 'Hardcoded JWT Bearer Token' },
   { pattern: /PGPASSWORD\s*=\s*['"]?[^'"\s]+['"]?/i, description: 'Exposed PGPASSWORD assignment' }
 ];

@@ -260,6 +260,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
             var u = context.Users.FirstOrDefault(x => x.Username == username);
             if (u == null)
             {
+                // New user: seed with the configured initial password.
                 u = new User
                 {
                     Username = username,
@@ -272,12 +273,8 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
                 };
                 context.Users.Add(u);
             }
-            else
-            {
-                u.PasswordHash = initialHash;
-                u.FailedLoginCount = 0;
-                u.LockoutEnd = null;
-            }
+            // Existing users: preserve their current password hash, failed-login
+            // count, and lockout timestamp. Do NOT reset them on every startup.
             return u;
         }
         var uAdmin = EnsureUser("admin",            "System Admin",           "admin@fmdds.lk");
