@@ -22,6 +22,11 @@ async function runTests() {
 
   let passed = 0;
   let failed = 0;
+  const testUserPassword = process.env.TEST_USER_PASSWORD;
+
+  if (!testUserPassword) {
+    throw new Error('TEST_USER_PASSWORD environment variable is required to run integration-tests.js');
+  }
 
   // Test Case 1: Authentication & RBAC Login
   try {
@@ -31,7 +36,7 @@ async function runTests() {
     const jmoRes = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'jmo_perera', password: process.env.TEST_USER_PASSWORD })
+      body: JSON.stringify({ username: 'jmo_perera', password: testUserPassword })
     });
     assert(jmoRes.status === 200, 'JMO login returns 200 OK');
     const jmoData = await jmoRes.json();
@@ -64,7 +69,7 @@ async function runTests() {
     const jmoLogin = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'jmo_perera', password: process.env.TEST_USER_PASSWORD })
+      body: JSON.stringify({ username: 'jmo_perera', password: testUserPassword })
     });
     const { token } = await jmoLogin.json();
 
@@ -121,7 +126,7 @@ async function runTests() {
     const jmoLogin = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'jmo_perera', password: process.env.TEST_USER_PASSWORD })
+      body: JSON.stringify({ username: 'jmo_perera', password: testUserPassword })
     });
     const { token } = await jmoLogin.json();
 
@@ -187,7 +192,7 @@ async function runTests() {
     const lockedRes = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: process.env.TEST_USER_PASSWORD })
+      body: JSON.stringify({ username: 'admin', password: testUserPassword })
     });
     
     assert(lockedRes.status === 423, '6th attempt returns 423 Locked Out (even with correct password)');
