@@ -14,7 +14,7 @@ const Footer = () => {
       color: 'var(--text-muted)'
     }}>
       <div>© 2026 Forensic Medicine Department | Medico-Legal Database System</div>
-      <div>Security Standard: HIPAA / GDPR Compliant</div>
+      <div>Designed with data privacy and security principles</div>
     </footer>
   );
 };

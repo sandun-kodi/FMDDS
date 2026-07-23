@@ -184,11 +184,10 @@ test.describe('FMDDS E2E Browser Workflows (against Isolated Port 5201 & Vite 51
     await page.waitForURL('**/dashboard');
     await expect(page.getByText('Total Cases')).toBeVisible();
 
-    // 16. System Settings blocked-state message
-    await page.getByText('System Settings').first().click();
-    await page.waitForURL('**/admin/settings');
-    await expect(page.getByText('System Settings Integration Blocked')).toBeVisible();
-    await expect(page.getByText('Feature Disabled Pending Backend Authorization Patch')).toBeVisible();
+    // 16. Verify System Settings link is absent and direct route disabled
+    await expect(page.getByText('System Settings')).not.toBeVisible();
+    await page.goto('/admin/settings');
+    await expect(page.getByText('404')).toBeVisible();
 
     // 17. Logout flow
     await page.getByRole('button', { name: /Log Out/i }).click();

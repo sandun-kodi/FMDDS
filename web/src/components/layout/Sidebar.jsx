@@ -11,8 +11,7 @@ import {
   FlaskConical,
   FileCheck,
   Users,
-  ShieldCheck,
-  Settings
+  ShieldCheck
 } from 'lucide-react';
 
 const Sidebar = ({ isCollapsed }) => {
@@ -29,8 +28,7 @@ const Sidebar = ({ isCollapsed }) => {
     { path: '/lab-requests', label: 'Lab Queue', icon: FlaskConical, isAllowed: () => hasAnyPermission('lab:request', 'lab:result_write') },
     { path: '/reports', label: 'Reports Queue', icon: FileCheck, isAllowed: () => hasAnyPermission('case:view_all', 'report:approve', 'report:print') },
     { path: '/admin/audit', label: 'Audit Logs', icon: ShieldCheck, isAllowed: () => hasPermission('admin:audit') },
-    { path: '/admin/users', label: 'User Management', icon: Users, isAllowed: () => hasPermission('user:manage') },
-    { path: '/admin/settings', label: 'System Settings', icon: Settings, isAllowed: () => hasAnyPermission('admin:stats', 'user:manage') },
+    { path: '/admin/users', label: 'User Management', icon: Users, isAllowed: () => hasPermission('user:manage') }
   ];
 
   const allowedNavItems = allNavItems.filter((item) => item.isAllowed());
