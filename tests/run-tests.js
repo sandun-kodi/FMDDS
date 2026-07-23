@@ -76,8 +76,10 @@ async function main() {
     TEST_CONNECTION_STRING: testConnString,
     JwtSettings__SecretKey: jwtSecret,
     JwtSettings__Issuer: 'FMDDS_API',
-    JwtSettings__Audience: 'FMDDS_CLIENTS'
+    JwtSettings__Audience: 'FMDDS_CLIENTS',
+    SeedData__InitialPassword: 'password123'
   });
+
 
   const backendProjectPath = path.join('Backend', 'backend.csproj');
   const testsProjectPath = path.join('Backend.Tests', 'Backend.Tests.csproj');
