@@ -330,8 +330,8 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         if (!context.Patients.Any())
         {
             context.Patients.AddRange(
-                new Patient { PatientID = 1, NIC = "198511223344", FullName = "Saman Kumara", DateOfBirth = new DateTime(1985, 5, 12), Gender = "Male", Address = "12/A, Kandy Road, Colombo", Telephone = "0771234567" },
-                new Patient { PatientID = 2, NIC = "199965432100", FullName = "Priyanthi Fernando", DateOfBirth = new DateTime(1999, 10, 4), Gender = "Female", Address = "45, Lake Road, Galle", Telephone = "0719876543" },
+                new Patient { PatientID = 1, NIC = "198511223344", FullName = "Saman Kumara", DateOfBirth = new DateTime(1985, 5, 12, 0, 0, 0, DateTimeKind.Utc), Gender = "Male", Address = "12/A, Kandy Road, Colombo", Telephone = "0771234567" },
+                new Patient { PatientID = 2, NIC = "199965432100", FullName = "Priyanthi Fernando", DateOfBirth = new DateTime(1999, 10, 4, 0, 0, 0, DateTimeKind.Utc), Gender = "Female", Address = "45, Lake Road, Galle", Telephone = "0719876543" },
                 new Patient { PatientID = 3, NIC = null, FullName = "Unknown Male Deceased", DateOfBirth = null, Gender = "Male", Address = null, Telephone = null }
             );
             context.SaveChanges();
@@ -341,9 +341,9 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         if (!context.Cases.Any())
         {
             context.Cases.AddRange(
-                new Case { CaseID = 1, PatientID = 1, CaseNumber = "COL/2026/CL/0001", CaseType = "Clinical Forensic", RegistrationDate = new DateTime(2026, 7, 1, 9, 0, 0), Status = "Examination In Progress", AssignedOfficerID = uMo.UserID, HospitalID = 1, WardID = 1, ReferralSourceTypeID = 3 },
-                new Case { CaseID = 2, PatientID = 2, CaseNumber = "COL/2026/CL/0002", CaseType = "Clinical Forensic", RegistrationDate = new DateTime(2026, 7, 2, 11, 30, 0), Status = "Closed", AssignedOfficerID = uJmo.UserID, HospitalID = 2, WardID = 3, ReferralSourceTypeID = 3 },
-                new Case { CaseID = 3, PatientID = 3, CaseNumber = "COL/2026/PM/0001", CaseType = "Postmortem", RegistrationDate = new DateTime(2026, 7, 3, 14, 15, 0), Status = "Registered", AssignedOfficerID = uJmo.UserID, HospitalID = null, WardID = null, ReferralSourceTypeID = 1 }
+                new Case { CaseID = 1, PatientID = 1, CaseNumber = "COL/2026/CL/0001", CaseType = "Clinical Forensic", RegistrationDate = new DateTime(2026, 7, 1, 9, 0, 0, DateTimeKind.Utc), Status = "Examination In Progress", AssignedOfficerID = uMo.UserID, HospitalID = 1, WardID = 1, ReferralSourceTypeID = 3 },
+                new Case { CaseID = 2, PatientID = 2, CaseNumber = "COL/2026/CL/0002", CaseType = "Clinical Forensic", RegistrationDate = new DateTime(2026, 7, 2, 11, 30, 0, DateTimeKind.Utc), Status = "Closed", AssignedOfficerID = uJmo.UserID, HospitalID = 2, WardID = 3, ReferralSourceTypeID = 3 },
+                new Case { CaseID = 3, PatientID = 3, CaseNumber = "COL/2026/PM/0001", CaseType = "Postmortem", RegistrationDate = new DateTime(2026, 7, 3, 14, 15, 0, DateTimeKind.Utc), Status = "Registered", AssignedOfficerID = uJmo.UserID, HospitalID = null, WardID = null, ReferralSourceTypeID = 1 }
             );
             context.SaveChanges();
         }
@@ -352,7 +352,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         if (!context.ClinicalExaminations.Any())
         {
             context.ClinicalExaminations.AddRange(
-                new ClinicalExamination { ClinicalExamID = 1, CaseID = 2, ExaminerID = uJmo.UserID, ExamDate = new DateTime(2026, 7, 2, 13, 0, 0), Observations = "Superficial laceration on left arm measuring 2cm. Tenderness in shoulder region.", Diagnosis = "Soft tissue bruising on left shoulder." }
+                new ClinicalExamination { ClinicalExamID = 1, CaseID = 2, ExaminerID = uJmo.UserID, ExamDate = new DateTime(2026, 7, 2, 13, 0, 0, DateTimeKind.Utc), Observations = "Superficial laceration on left arm measuring 2cm. Tenderness in shoulder region.", Diagnosis = "Soft tissue bruising on left shoulder." }
             );
             context.SaveChanges();
         }
@@ -371,7 +371,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
         if (!context.ChainOfCustody.Any())
         {
             context.ChainOfCustody.AddRange(
-                new ChainOfCustody { CustodyID = 1, EvidenceID = 2, TransferringOfficerID = uLab.UserID, ReceivingOfficerID = uLab.UserID, TransferTimestamp = new DateTime(2026, 7, 3, 16, 0, 0), Location = "Forensic Toxicology Lab", ReasonForTransfer = "Transferred specimen to Lab Staff for toxicological screening" }
+                new ChainOfCustody { CustodyID = 1, EvidenceID = 2, TransferringOfficerID = uLab.UserID, ReceivingOfficerID = uLab.UserID, TransferTimestamp = new DateTime(2026, 7, 3, 16, 0, 0, DateTimeKind.Utc), Location = "Forensic Toxicology Lab", ReasonForTransfer = "Transferred specimen to Lab Staff for toxicological screening" }
             );
             context.SaveChanges();
         }
