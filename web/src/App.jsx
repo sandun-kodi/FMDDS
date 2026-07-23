@@ -1,40 +1,157 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './Login';
-import Dashboard from './Dashboard';
-import Layout from './Layout';
-import PatientRegistration from './PatientRegistration';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import ProtectedRoute from './components/guards/ProtectedRoute';
+import RoleGuard from './components/guards/RoleGuard';
+import Layout from './components/layout/Layout';
 
-import LabInvestigations from './LabInvestigations';
-import SystemSettings from './SystemSettings';
-import CauseOfDeathForm from './CauseOfDeathForm';
-import AttachmentUploader from './AttachmentUploader';
-
-// Placeholder components for routing completeness
-const Placeholder = ({ title }) => (
-  <div style={{ padding: '1rem' }}>
-    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{title}</h2>
-    <p style={{ color: 'var(--text-muted)' }}>This component is currently being developed and integrated. Check back soon.</p>
-  </div>
-);
+import LoginView from './views/LoginView';
+import DashboardView from './views/DashboardView';
+import PatientRegisterView from './views/PatientRegisterView';
+import CaseRegisterView from './views/CaseRegisterView';
+import CaseListView from './views/CaseListView';
+import ClinicalExamView from './views/ClinicalExamView';
+import PostmortemExamView from './views/PostmortemExamView';
+import EvidenceView from './views/EvidenceView';
+import LabQueueView from './views/LabQueueView';
+import ReportsQueueView from './views/ReportsQueueView';
+import UserAdminView from './views/UserAdminView';
+import AuditLogView from './views/AuditLogView';
+import SystemSettingsView from './views/SystemSettingsView';
+import NotFoundView from './views/NotFoundView';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        
-        {/* Protected routes wrapped in Layout */}
-        <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-        <Route path="/patients/register" element={<Layout><PatientRegistration /></Layout>} />
-        <Route path="/cases/register" element={<Layout><Placeholder title="Register Case (SCR-004)" /></Layout>} />
-        <Route path="/exams/clinical" element={<Layout><Placeholder title="Clinical Examination (SCR-005)" /></Layout>} />
-        <Route path="/exams/postmortem" element={<Layout><CauseOfDeathForm /></Layout>} />
-        <Route path="/lab" element={<Layout><LabInvestigations /></Layout>} />
-        <Route path="/search" element={<Layout><Placeholder title="Search Cases (SCR-010)" /></Layout>} />
-        <Route path="/documents" element={<Layout><AttachmentUploader /></Layout>} />
-        <Route path="/settings" element={<Layout><SystemSettings /></Layout>} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <NotificationProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LoginView />} />
+            <Route path="/login" element={<Navigate to="/" replace />} />
+
+            {/* Authenticated Protected Routes wrapped in Layout */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Layout><DashboardView /></Layout>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/patients/register" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="case:create">
+                  <Layout><PatientRegisterView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/cases/register" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="case:create">
+                  <Layout><CaseRegisterView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/cases" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="case:view_all">
+                  <Layout><CaseListView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/cases/clinical/:caseId" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="exam:record_clinical">
+                  <Layout><ClinicalExamView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/exams/clinical" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="exam:record_clinical">
+                  <Layout><ClinicalExamView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/cases/autopsy/:caseId" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="exam:record_postmortem">
+                  <Layout><PostmortemExamView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/exams/postmortem" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="exam:record_postmortem">
+                  <Layout><PostmortemExamView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/evidence" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="evidence:manage">
+                  <Layout><EvidenceView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/lab-requests" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermissions={['lab:request', 'lab:result_write']}>
+                  <Layout><LabQueueView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/reports" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermissions={['case:view_all', 'report:approve', 'report:print']}>
+                  <Layout><ReportsQueueView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/admin/users" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="user:manage">
+                  <Layout><UserAdminView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/admin/audit" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermission="admin:audit">
+                  <Layout><AuditLogView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/admin/settings" element={
+              <ProtectedRoute>
+                <RoleGuard requiredPermissions={['admin:stats', 'user:manage']}>
+                  <Layout><SystemSettingsView /></Layout>
+                </RoleGuard>
+              </ProtectedRoute>
+            } />
+
+            {/* 404 Fallback */}
+            <Route path="*" element={
+              <ProtectedRoute>
+                <Layout><NotFoundView /></Layout>
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </BrowserRouter>
+      </NotificationProvider>
+    </AuthProvider>
   );
 }
 
