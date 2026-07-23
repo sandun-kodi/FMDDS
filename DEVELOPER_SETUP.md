@@ -27,7 +27,7 @@ $dotnet = "$env:USERPROFILE\.dotnet\dotnet.exe"
 # 1. Set Local Application Database Connection String (Using local postgres user)
 & $dotnet user-secrets set `
   "ConnectionStrings:DefaultConnection" `
-  "Host=localhost;Port=5432;Database=fmdds_db;Username=postgres;******" `
+  "Host=localhost;Port=5432;Database=fmdds_db;Username=postgres;Password=<YOUR_LOCAL_POSTGRES_PASSWORD>" `
   --project .\Backend\backend.csproj
 
 # 2. Set Local Cryptographically Random JWT Secret (Minimum 32 Characters)
@@ -62,7 +62,7 @@ Refer to `tests/setup-test-database.example.sql` for the SQL template to create 
 Run the test runner with the test connection string provided via shell environment:
 
 ```powershell
-$env:TEST_CONNECTION_STRING = "Host=localhost;Port=5432;Database=fmdds_test;Username=fmdds_test_runner;******"
+$env:TEST_CONNECTION_STRING = "Host=localhost;Port=5432;Database=fmdds_test;Username=fmdds_test_runner;Password=<LOCAL_TEST_PASSWORD>"
 
 node tests/run-tests.js
 ```
