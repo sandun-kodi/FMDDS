@@ -58,5 +58,5 @@ For `ROLE-007` (Research User) access, the API must process records through a de
 ## 4. Audit Log Immutability
 
 To guarantee audit accountability under `BRL-021` and `BRL-022`:
-* **Write Privilege**: The API server database connection (`fmdds_app`) is authorized to `INSERT` records into `AuditLog` but is strictly blocked from executing `UPDATE` or `DELETE` commands on the table.
+* **Write Privilege**: The API server database connection (production: `fmdds_app`; local dev: `postgres`) is authorized to `INSERT` records into `AuditLog` but is strictly blocked from executing `UPDATE` or `DELETE` commands on the table.
 * **Access Restrict**: Audit logs can only be read by System Administrators via the `/admin/audit-logs` endpoint.

@@ -31,7 +31,7 @@ async function runTests() {
     const jmoRes = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'jmo_perera', password: 'password123' })
+      body: JSON.stringify({ username: 'jmo_perera', password: process.env.TEST_USER_PASSWORD })
     });
     assert(jmoRes.status === 200, 'JMO login returns 200 OK');
     const jmoData = await jmoRes.json();
@@ -64,7 +64,7 @@ async function runTests() {
     const jmoLogin = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'jmo_perera', password: 'password123' })
+      body: JSON.stringify({ username: 'jmo_perera', password: process.env.TEST_USER_PASSWORD })
     });
     const { token } = await jmoLogin.json();
 
@@ -121,7 +121,7 @@ async function runTests() {
     const jmoLogin = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'jmo_perera', password: 'password123' })
+      body: JSON.stringify({ username: 'jmo_perera', password: process.env.TEST_USER_PASSWORD })
     });
     const { token } = await jmoLogin.json();
 
@@ -187,7 +187,7 @@ async function runTests() {
     const lockedRes = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: 'password123' })
+      body: JSON.stringify({ username: 'admin', password: process.env.TEST_USER_PASSWORD })
     });
     
     assert(lockedRes.status === 423, '6th attempt returns 423 Locked Out (even with correct password)');

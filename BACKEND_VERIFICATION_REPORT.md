@@ -46,13 +46,12 @@ The backend has been verified locally, committed as a single clean commit ahead 
 ## 2. Historical Credential Exposure & Password Rotation
 
 1. **Credential Sanitization**: Removed all real development, database, administrator, and production secrets from tracked files. Clearly labelled test-only values may remain where they are not used outside the Testing environment.
-2. **`fmdds_app` Password Rotation**: Rotated `fmdds_app` password in PostgreSQL using interactive command input. Updated ASP.NET Core User Secrets (`dotnet user-secrets set "ConnectionStrings:DefaultConnection"`).
+2. **`fmdds_app` Role Removed**: The custom `fmdds_app` PostgreSQL role has been removed from local development setup. Local development now uses each developer's own local `postgres` user. The role was rotated and then dropped as part of credential cleanup.
 3. **`postgres` Superuser Password Rotation**: Rotated `postgres` administrator password away from `admin` using interactive command input.
 4. **Seed Secret Rotation**: Replaced `SeedData:InitialPassword` in User Secrets with a cryptographically strong random value (replacing default development initial password).
-5. **Credential Invalidation Verification**:
+5. **Credential Invalidation Verification** (historical, role removed):
    * Previously exposed application credential A: **REJECTED** (`FATAL: password authentication failed for user "fmdds_app"`).
    * Previously exposed application credential B: **REJECTED** (`FATAL: password authentication failed for user "fmdds_app"`).
-   * Rotated `fmdds_app` password connection attempt: **SUCCESS** (`SELECT 1;`).
 6. **Zero Plaintext Secrets**: Confirmed zero real credentials, database passwords, administrator passwords, User Secrets values, or production signing keys exist in tracked files.
 7. **Test-Only JWT Signing Key**: The test launcher (`tests/run-tests.js`) provides a clearly labelled fallback JWT signing key used strictly when `ASPNETCORE_ENVIRONMENT=Testing`. It can be overridden via the `TEST_JWT_SECRET` environment variable and MUST NEVER be reused in Development or Production environments.
 
@@ -162,7 +161,7 @@ $env:DOTNET_ROOT = "$env:USERPROFILE\.dotnet"
 $env:PATH = "$env:DOTNET_ROOT;$env:USERPROFILE\.dotnet\tools;$env:PATH"
 
 # Configure test environment variables
-$env:TEST_CONNECTION_STRING = "Host=localhost;Port=5432;Database=fmdds_test;Username=fmdds_app;Password=<password>"
+$env:TEST_CONNECTION_STRING = "Host=localhost;Port=5432;Database=fmdds_test;Username=fmdds_test_runner;Password=<password>"
 $env:TEST_JWT_SECRET = "TEST_SUITE_JWT_SECRET_KEY_FOR_AUTOMATED_TESTS_2026!"
 
 # Run full build, unit, integration, and smoke test suites
