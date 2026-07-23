@@ -19,6 +19,11 @@ async function runSmokeTest() {
 
   let passed = 0;
   let failed = 0;
+  const testUserPassword = process.env.TEST_USER_PASSWORD;
+
+  if (!testUserPassword) {
+    throw new Error('TEST_USER_PASSWORD environment variable is required to run smoke tests.');
+  }
 
   // Step 1 & 2: Health Check & Database Connectivity
   try {
@@ -44,7 +49,7 @@ async function runSmokeTest() {
     const loginRes = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'jmo_perera', password: process.env.TEST_USER_PASSWORD })
+      body: JSON.stringify({ username: 'jmo_perera', password: testUserPassword })
     });
     assert(loginRes.status === 200, 'JMO login returns 200 OK');
     const loginData = await loginRes.json();
@@ -55,7 +60,7 @@ async function runSmokeTest() {
     const moLogin = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'mo_silva', password: process.env.TEST_USER_PASSWORD })
+      body: JSON.stringify({ username: 'mo_silva', password: testUserPassword })
     });
     const moData = await moLogin.json();
     moToken = moData.token;
@@ -237,7 +242,7 @@ async function runSmokeTest() {
     const labStaffLogin = await fetch(`${BACKEND_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'lab_fernando', password: process.env.TEST_USER_PASSWORD })
+      body: JSON.stringify({ username: 'lab_fernando', password: testUserPassword })
     });
     const labStaffData = await labStaffLogin.json();
     const labStaffId = labStaffData.user.userID || labStaffData.user.UserID || 4;
