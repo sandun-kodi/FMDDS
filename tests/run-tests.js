@@ -1,5 +1,5 @@
 const { execSync, spawn } = require('child_process');
-const http = require('http');
+const crypto = require('crypto');
 const path = require('path');
 
 const DOTNET_EXE = process.env.DOTNET_EXE || 'dotnet';
@@ -7,14 +7,14 @@ const TEST_PORT = process.env.TEST_PORT ? parseInt(process.env.TEST_PORT, 10) : 
 const TEST_BASE_URL = `http://localhost:${TEST_PORT}/api/v1`;
 
 // Connection string resolution
-const testConnString = process.env.TEST_CONNECTION_STRING || process.env.ConnectionStrings__DefaultConnection || '';
+const testConnString = process.env.TEST_CONNECTION_STRING || '';
 
 if (!testConnString) {
   console.error('FATAL: Test connection string missing.');
   console.error('Please set the TEST_CONNECTION_STRING environment variable before running tests.');
-  console.error('Example: $env:TEST_CONNECTION_STRING="Host=localhost;Port=5432;Database=fmdds_test;Username=fmdds_app;Password=<password>"');
+  console.error('Example: $env:TEST_CONNECTION_STRING="Host=localhost;Port=5432;Database=fmdds_test;Username=fmdds_test_runner;Password=<password>"');
   process.exitCode = 1;
-  return;
+  process.exit(1);
 }
 
 // Database safety assertion: Extract database name and confirm it ends with _test
@@ -24,10 +24,19 @@ const targetDb = dbMatch ? dbMatch[1] : '';
 if (!targetDb || !targetDb.toLowerCase().endsWith('_test')) {
   console.error(`FATAL: Test launcher safety violation! Target database '${targetDb}' does not end with '_test'. Aborting execution.`);
   process.exitCode = 1;
-  return;
+  process.exit(1);
 }
 
-const jwtSecret = process.env.TEST_JWT_SECRET || 'TEST_SUITE_JWT_SECRET_KEY_FOR_AUTOMATED_TESTS_2026!';
+const protectedDbs = ['fmdds_db', 'postgres', 'template0', 'template1'];
+if (protectedDbs.includes(targetDb.toLowerCase())) {
+  console.error(`FATAL: Test launcher safety violation! Target database '${targetDb}' is a protected or system database. Aborting execution.`);
+  process.exitCode = 1;
+  process.exit(1);
+}
+
+// Generate in-memory temporary test credentials
+const testSeedPassword = process.env.TEST_USER_PASSWORD || `${crypto.randomBytes(24).toString('base64url')}!Aa1`;
+const testJwtSecret = process.env.TEST_JWT_SECRET || crypto.randomBytes(48).toString('base64url');
 
 console.log('==================================================');
 console.log('   FMDDS ISOLATED AUTOMATED TEST RUNNER');
@@ -74,12 +83,12 @@ async function main() {
     ASPNETCORE_URLS: `http://localhost:${TEST_PORT}`,
     ConnectionStrings__DefaultConnection: testConnString,
     TEST_CONNECTION_STRING: testConnString,
-    JwtSettings__SecretKey: jwtSecret,
+    JwtSettings__SecretKey: testJwtSecret,
     JwtSettings__Issuer: 'FMDDS_API',
     JwtSettings__Audience: 'FMDDS_CLIENTS',
-    SeedData__InitialPassword: 'password123'
+    SeedData__InitialPassword: testSeedPassword,
+    TEST_USER_PASSWORD: testSeedPassword
   });
-
 
   const backendProjectPath = path.join('Backend', 'backend.csproj');
   const testsProjectPath = path.join('Backend.Tests', 'Backend.Tests.csproj');
@@ -115,7 +124,7 @@ async function main() {
     let integrationPassed = false;
     try {
       execSync('node tests/integration-tests.js', {
-        env: Object.assign({}, env, { BACKEND_URL: TEST_BASE_URL }),
+        env: Object.assign({}, env, { BACKEND_URL: TEST_BASE_URL, TEST_USER_PASSWORD: testSeedPassword }),
         stdio: 'inherit'
       });
       integrationPassed = true;
@@ -130,7 +139,7 @@ async function main() {
     let smokeRun1Passed = false;
     try {
       execSync('node tests/smoke-test.js', {
-        env: Object.assign({}, env, { BACKEND_URL: TEST_BASE_URL }),
+        env: Object.assign({}, env, { BACKEND_URL: TEST_BASE_URL, TEST_USER_PASSWORD: testSeedPassword }),
         stdio: 'inherit'
       });
       smokeRun1Passed = true;
@@ -145,7 +154,7 @@ async function main() {
     let smokeRun2Passed = false;
     try {
       execSync('node tests/smoke-test.js', {
-        env: Object.assign({}, env, { BACKEND_URL: TEST_BASE_URL }),
+        env: Object.assign({}, env, { BACKEND_URL: TEST_BASE_URL, TEST_USER_PASSWORD: testSeedPassword }),
         stdio: 'inherit'
       });
       smokeRun2Passed = true;
