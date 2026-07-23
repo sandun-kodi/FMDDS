@@ -58,5 +58,24 @@ namespace FMDDS.API.Controllers
                 return StatusCode(500, new { code = "ERR_INTERNAL_SERVER", message = "An error occurred generating dashboard statistics." });
             }
         }
+
+        /// <summary>
+        /// Retrieves system roles and their assigned permissions.
+        /// Route: GET /api/v1/admin/roles-permissions
+        /// </summary>
+        [HttpGet("roles-permissions")]
+        [PermissionAuthorize("user:manage")] // Admins Only
+        public async Task<IActionResult> GetRolesPermissions()
+        {
+            try
+            {
+                var rolesPerms = await _adminService.GetRolesWithPermissionsAsync();
+                return Ok(rolesPerms);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new { code = "ERR_INTERNAL_SERVER", message = "An error occurred retrieving roles and permissions." });
+            }
+        }
     }
 }

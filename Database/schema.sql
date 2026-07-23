@@ -5,6 +5,9 @@
 -- Tags: #database #security
 
 -- Clean up existing database objects to allow clean reinstall
+DROP VIEW IF EXISTS VW_UserRoles CASCADE;
+DROP VIEW IF EXISTS VW_ReportSummary CASCADE;
+DROP VIEW IF EXISTS VW_LaboratoryStatus CASCADE;
 DROP VIEW IF EXISTS VW_CaseSummary CASCADE;
 DROP VIEW IF EXISTS VW_OpenCases CASCADE;
 
@@ -150,8 +153,8 @@ CREATE TABLE "Case" (
     CONSTRAINT FK_Case_ReferralSourceType FOREIGN KEY (ReferralSourceTypeID) REFERENCES ReferralSourceType (ReferralSourceTypeID) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT CK_Case_CaseType CHECK (CaseType IN ('Clinical Forensic', 'Postmortem')),
     CONSTRAINT CK_Case_Status CHECK (Status IN (
-        'Registered', 'Assigned', 'Examination In Progress', 
-        'Laboratory Pending', 'Report Preparation', 'Report Approved', 
+        'Registered', 'Assigned', 'Examination In Progress',
+        'Laboratory Pending', 'Report Preparation', 'Report Approved',
         'Closed', 'Archived'
     )),
     CONSTRAINT CK_Case_RegistrationDate CHECK (RegistrationDate <= CURRENT_TIMESTAMP)
@@ -332,30 +335,81 @@ CREATE INDEX IX_CauseOfDeath_PostmortemID ON CauseOfDeathRecord (PostmortemID);
 --------------------------------------------------------------------------------
 
 CREATE OR REPLACE VIEW VW_OpenCases AS
-SELECT 
-    CaseID,
-    CaseNumber,
-    CaseType,
-    RegistrationDate,
-    Status,
-    AssignedOfficerID
-FROM "Case"
-WHERE Status NOT IN ('Closed', 'Archived');
-
-CREATE OR REPLACE VIEW VW_CaseSummary AS
-SELECT 
+SELECT
     c.CaseID,
     c.CaseNumber,
     c.CaseType,
     c.RegistrationDate,
     c.Status,
+    p.PatientID,
     p.FullName AS PatientName,
     p.NIC AS PatientNIC,
-    u.FullName AS AssignedOfficerName,
-    h.HospitalName,
-    w.WardName
+    u.UserID AS AssignedOfficerID,
+    u.FullName AS AssignedOfficerName
 FROM "Case" c
 INNER JOIN Patient p ON c.PatientID = p.PatientID
 LEFT JOIN "User" u ON c.AssignedOfficerID = u.UserID
-LEFT JOIN Hospital h ON c.HospitalID = h.HospitalID
-LEFT JOIN Ward w ON c.WardID = w.WardID;
+WHERE c.Status NOT IN ('Closed', 'Archived');
+
+CREATE OR REPLACE VIEW VW_CaseSummary AS
+SELECT
+    c.CaseID,
+    c.CaseNumber,
+    c.CaseType,
+    c.Status,
+    c.RegistrationDate,
+    p.FullName AS PatientName,
+    p.Gender,
+    p.NIC AS PatientNIC,
+    ce.ExamDate AS ClinicalExamDate,
+    ce.Diagnosis AS ClinicalDiagnosis,
+    pe.ExamDate AS AutopsyDate,
+    pe.CauseOfDeath AS AutopsyCauseOfDeath
+FROM "Case" c
+INNER JOIN Patient p ON c.PatientID = p.PatientID
+LEFT JOIN ClinicalExamination ce ON c.CaseID = ce.CaseID
+LEFT JOIN PostmortemExamination pe ON c.CaseID = pe.CaseID;
+
+CREATE OR REPLACE VIEW VW_LaboratoryStatus AS
+SELECT
+    lr.LabRequestID,
+    lr.CaseID,
+    c.CaseNumber,
+    lr.RequestDate,
+    lr.Status AS RequestStatus,
+    res.LabResultID,
+    res.CompletionDate,
+    CASE
+        WHEN res.LabResultID IS NULL THEN 'Awaiting Analysis'
+        ELSE 'Results Finalized'
+    END AS ResultState
+FROM LaboratoryRequest lr
+INNER JOIN "Case" c ON lr.CaseID = c.CaseID
+LEFT JOIN LaboratoryResult res ON lr.LabRequestID = res.LabRequestID;
+
+CREATE OR REPLACE VIEW VW_ReportSummary AS
+SELECT
+    r.ReportID,
+    r.CaseID,
+    c.CaseNumber,
+    r.ReportType,
+    r.ApprovalStatus,
+    r.ApprovalDate,
+    u.UserID AS ApproverID,
+    u.FullName AS ApproverName
+FROM MedicoLegalReport r
+INNER JOIN "Case" c ON r.CaseID = c.CaseID
+LEFT JOIN "User" u ON r.ApprovedByID = u.UserID;
+
+CREATE OR REPLACE VIEW VW_UserRoles AS
+SELECT
+    u.UserID,
+    u.Username,
+    u.FullName AS UserFullName,
+    u.IsActive,
+    r.RoleID,
+    r.RoleName,
+    r.Description AS RoleDescription
+FROM "User" u
+INNER JOIN UserRole ur ON u.UserID = ur.UserID
+INNER JOIN "Role" r ON ur.RoleID = r.RoleID;

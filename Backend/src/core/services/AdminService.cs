@@ -15,13 +15,16 @@ namespace FMDDS.Core.Services
     {
         private readonly IRepository<AuditLog> _auditRepo;
         private readonly ICaseRepository _caseRepo;
+        private readonly FMDDS.Data.Db.AppDbContext _context;
 
         public AdminService(
             IRepository<AuditLog> auditRepo,
-            ICaseRepository caseRepo)
+            ICaseRepository caseRepo,
+            FMDDS.Data.Db.AppDbContext context)
         {
             _auditRepo = auditRepo;
             _caseRepo = caseRepo;
+            _context = context;
         }
 
         public async Task<IEnumerable<AuditLog>> GetAuditLogsAsync(int page = 1, int pageSize = 100)
@@ -49,6 +52,27 @@ namespace FMDDS.Core.Services
 
             return stats;
         }
+
+        public async Task<IEnumerable<RoleWithPermissionsDto>> GetRolesWithPermissionsAsync()
+        {
+            var roles = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(_context.Roles);
+            var rolePermissions = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(_context.RolePermissions);
+            var permissions = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(_context.Permissions);
+
+            var permMap = permissions.ToDictionary(p => p.PermissionID, p => p.PermissionKey);
+
+            return roles.Select(r => new RoleWithPermissionsDto
+            {
+                RoleID = r.RoleID,
+                RoleName = r.RoleName,
+                Description = r.Description,
+                Permissions = rolePermissions
+                    .Where(rp => rp.RoleID == r.RoleID && permMap.ContainsKey(rp.PermissionID))
+                    .Select(rp => permMap[rp.PermissionID])
+                    .Distinct()
+                    .ToList()
+            });
+        }
     }
 
     public class DashboardStatsDto
@@ -57,5 +81,13 @@ namespace FMDDS.Core.Services
         public int ActiveCases { get; set; }
         public Dictionary<string, int> CasesByType { get; set; }
         public Dictionary<string, int> CasesByStatus { get; set; }
+    }
+
+    public class RoleWithPermissionsDto
+    {
+        public int RoleID { get; set; }
+        public string RoleName { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public List<string> Permissions { get; set; } = new();
     }
 }

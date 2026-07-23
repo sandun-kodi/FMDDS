@@ -108,7 +108,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -292,6 +292,30 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
                 new UserRole { UserID = uMo.UserID,    RoleID = moRole.RoleID    },
                 new UserRole { UserID = uLab.UserID,   RoleID = labRole.RoleID   },
                 new UserRole { UserID = uClerk.UserID, RoleID = clerkRole.RoleID }
+            );
+            context.SaveChanges();
+        }
+
+        // 6. Seed Hospital, Ward, and ReferralSourceType
+        if (!context.Set<Hospital>().Any())
+        {
+            var testHospital = new Hospital { HospitalName = "Colombo South Teaching Hospital" };
+            context.Set<Hospital>().Add(testHospital);
+            context.SaveChanges();
+
+            if (!context.Set<Ward>().Any())
+            {
+                context.Set<Ward>().Add(new Ward { WardName = "Emergency Unit", HospitalID = testHospital.HospitalID });
+                context.SaveChanges();
+            }
+        }
+
+        if (!context.Set<ReferralSourceType>().Any())
+        {
+            context.Set<ReferralSourceType>().AddRange(
+                new ReferralSourceType { TypeName = "Police Station" },
+                new ReferralSourceType { TypeName = "Magistrate Order" },
+                new ReferralSourceType { TypeName = "Self/Direct Walk-in" }
             );
             context.SaveChanges();
         }
