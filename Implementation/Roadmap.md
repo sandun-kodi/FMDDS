@@ -56,3 +56,6 @@ gantt
   * Barcode scanning support for laboratory specimens.
   * Integration with external hospital HIS / LIS databases.
   * Digital signature certificates for JMO report approvals.
+
+* **System Settings Management**:
+  The administrator-facing System Settings interface is reserved for a future release. Before it is enabled, the backend settings endpoints must enforce authenticated administrator access, explicit settings-management permissions, input validation, audit logging, and safe handling of configuration changes.

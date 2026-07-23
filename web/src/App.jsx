@@ -18,7 +18,6 @@ import LabQueueView from './views/LabQueueView';
 import ReportsQueueView from './views/ReportsQueueView';
 import UserAdminView from './views/UserAdminView';
 import AuditLogView from './views/AuditLogView';
-import SystemSettingsView from './views/SystemSettingsView';
 import NotFoundView from './views/NotFoundView';
 
 function App() {
@@ -130,14 +129,6 @@ function App() {
               <ProtectedRoute>
                 <RoleGuard requiredPermission="admin:audit">
                   <Layout><AuditLogView /></Layout>
-                </RoleGuard>
-              </ProtectedRoute>
-            } />
-
-            <Route path="/admin/settings" element={
-              <ProtectedRoute>
-                <RoleGuard requiredPermissions={['admin:stats', 'user:manage']}>
-                  <Layout><SystemSettingsView /></Layout>
                 </RoleGuard>
               </ProtectedRoute>
             } />

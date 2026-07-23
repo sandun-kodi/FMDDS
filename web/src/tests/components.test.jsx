@@ -6,7 +6,7 @@ import ProtectedRoute from '../components/guards/ProtectedRoute';
 import RoleGuard from '../components/guards/RoleGuard';
 import Sidebar from '../components/layout/Sidebar';
 import LoginView from '../views/LoginView';
-import SystemSettingsView from '../views/SystemSettingsView';
+import Footer from '../components/layout/Footer';
 import { AuthContext } from '../context/AuthContext';
 import { NotificationContext } from '../context/NotificationContext';
 
@@ -70,20 +70,20 @@ describe('React Component Unit Tests (Mocked State & Zero DB Connections)', () =
     expect(screen.queryByText('Clinical Examination View')).not.toBeInTheDocument();
   });
 
-  it('3. Sidebar filters menu items based on JWT permissions', () => {
-    const authValue = {
-      user: { fullName: 'Clerk User', username: 'clerk_jayasuriya' },
-      role: 'Clerical Staff',
-      hasPermission: (perm) => ['case:create', 'case:view_all'].includes(perm),
-      hasAnyPermission: (...perms) => perms.some(p => ['case:create', 'case:view_all'].includes(p))
+  it('3. Sidebar filters menu items and omits System Settings for all users', () => {
+    const adminAuthValue = {
+      user: { fullName: 'Admin User', username: 'admin' },
+      role: 'System Administrator',
+      hasPermission: () => true,
+      hasAnyPermission: () => true
     };
 
-    renderWithProviders(<Sidebar isOpen={true} toggleSidebar={() => {}} />, { authValue });
+    renderWithProviders(<Sidebar isCollapsed={false} />, { authValue: adminAuthValue });
 
-    expect(screen.getByText('Case Registration')).toBeInTheDocument();
-    expect(screen.getByText('Cases Directory')).toBeInTheDocument();
-    expect(screen.queryByText('Clinical Exam')).not.toBeInTheDocument();
-    expect(screen.queryByText('Audit Log')).not.toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('User Management')).toBeInTheDocument();
+    expect(screen.getByText('Audit Logs')).toBeInTheDocument();
+    expect(screen.queryByText('System Settings')).not.toBeInTheDocument();
   });
 
   it('4. LoginView renders login form and handles input validation', () => {
@@ -96,11 +96,10 @@ describe('React Component Unit Tests (Mocked State & Zero DB Connections)', () =
     expect(screen.getByPlaceholderText('••••••••')).toBeInTheDocument();
   });
 
-  it('5. SystemSettingsView renders security-blocked message and performs no API requests', () => {
-    renderWithProviders(<SystemSettingsView />);
+  it('5. Footer renders privacy statement and excludes unsupported HIPAA / GDPR compliance claim', () => {
+    renderWithProviders(<Footer />);
 
-    expect(screen.getByText('System Settings Integration Blocked')).toBeInTheDocument();
-    expect(screen.getByText(/System settings are temporarily unavailable because the backend settings endpoints/i)).toBeInTheDocument();
-    expect(screen.getByText('Feature Disabled Pending Backend Authorization Patch')).toBeInTheDocument();
+    expect(screen.getByText('Designed with data privacy and security principles')).toBeInTheDocument();
+    expect(screen.queryByText(/HIPAA \/ GDPR Compliant/i)).not.toBeInTheDocument();
   });
 });
