@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import apiClient from '../services/apiClient';
 import { extractJwtUserData, isTokenExpired } from '../utils/jwtUtils';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes inactivity
 

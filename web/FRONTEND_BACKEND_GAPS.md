@@ -1,10 +1,19 @@
 # FMDDS Frontend-Backend API Contract & Feature Gaps Document
 
-This document records the exact API contract discrepancies, missing backend list endpoints, and configuration gaps identified during frontend integration testing against the ASP.NET Core backend.
+This document records the exact API contract discrepancies, missing backend list endpoints, and security configuration gaps identified during frontend integration testing against the ASP.NET Core backend.
 
 ---
 
-## 1. Case Management & Intake Gaps
+## 1. Security & Settings Access Control Gaps
+
+* **Unprotected Settings Endpoints (Disabled in Frontend)**:
+  * **Endpoints**: `GET /api/v1/settings` and `PUT /api/v1/settings/bulk`.
+  * **Security Defect**: These endpoints currently lack backend authentication (`[Authorize]`) and permission checks (`[PermissionAuthorize]`). Anyone can query or update system settings without credentials.
+  * **Frontend Action**: Settings API invocation and editing controls are **intentionally disabled** in `SystemSettingsView.jsx` and `adminService.js`. The settings view displays a security-blocked state until backend authentication remediation is completed.
+
+---
+
+## 2. Case Management & Intake Gaps
 
 * **`referralSource` Text Field Not Persisted**:
   * **Endpoint**: `POST /api/v1/cases`
@@ -14,7 +23,7 @@ This document records the exact API contract discrepancies, missing backend list
 
 ---
 
-## 2. Laboratory Investigation Gaps
+## 3. Laboratory Investigation Gaps
 
 * **Missing Test Type Selection in Request Creation**:
   * **Endpoint**: `POST /api/v1/cases/{caseId}/lab-requests`
@@ -25,7 +34,7 @@ This document records the exact API contract discrepancies, missing backend list
 
 ---
 
-## 3. Evidence & Custody Ledger Gaps
+## 4. Evidence & Custody Ledger Gaps
 
 * **Missing Global Evidence Directory Endpoint**:
   * **Existing Routes**: `POST /api/v1/cases/{caseId}/evidence`, `POST /api/v1/evidence/{evidenceId}/transfer`, `GET /api/v1/evidence/{evidenceId}/custody-log`.
@@ -34,7 +43,7 @@ This document records the exact API contract discrepancies, missing backend list
 
 ---
 
-## 4. Report Management Gaps
+## 5. Report Management Gaps
 
 * **Missing Global Reports Listing Endpoint**:
   * **Existing Routes**: `POST /api/v1/cases/{caseId}/reports`, `POST /api/v1/cases/{caseId}/reports/approve`, `PUT /api/v1/reports/{reportId}/approve`, `GET /api/v1/cases/{caseId}/reports/download`.
@@ -43,7 +52,7 @@ This document records the exact API contract discrepancies, missing backend list
 
 ---
 
-## 5. Administration & User Management Gaps
+## 6. Administration & User Management Gaps
 
 * **Missing User Management Endpoints**:
   * **Missing Routes**: `GET /api/v1/admin/users`, `POST /api/v1/admin/users`, `PUT /api/v1/admin/users/{id}/roles`.
@@ -51,14 +60,3 @@ This document records the exact API contract discrepancies, missing backend list
 * **Integrated Admin Endpoints**:
   * `GET /api/v1/admin/audit-logs?page=1&pageSize=100` (Fully integrated into `AuditLogView`).
   * `GET /api/v1/admin/dashboard-stats` (Fully integrated into `DashboardView`).
-  * `GET /api/v1/settings` and `PUT /api/v1/settings/bulk` (Fully integrated into `SystemSettingsView`).
-
----
-
-## 6. Seeded Roles & Permissions Alignment
-
-* **Seeded Administrator Permissions**:
-  * The backend `System Administrator` role is seeded with `user:manage`, `admin:audit`, `admin:stats`, and `case:view_all`.
-  * Administrator accounts do NOT have `case:create`, `exam:record_clinical`, `exam:record_postmortem`, `lab:request`, `lab:result_write`, `evidence:manage`, or `report:approve`.
-  * **Frontend Enforcement**: UI action controls and route guards check JWT `permissions` claims directly.
-* **Unseeded Documented Roles**: `Forensic Officer` and `Research User` are defined in documentation but not seeded in PostgreSQL.
