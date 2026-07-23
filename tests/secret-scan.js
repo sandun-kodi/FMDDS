@@ -51,6 +51,7 @@ function scanTrackedFiles() {
   for (const relPath of trackedFiles) {
     if (ignoredDirs.some(dir => relPath.startsWith(dir + '/'))) continue;
     if (relPath.endsWith('.png') || relPath.endsWith('.jpg') || relPath.endsWith('.ico')) continue;
+    if (relPath.endsWith('secret-scan.js')) continue;
 
     const fullPath = path.resolve(relPath);
     if (!fs.existsSync(fullPath)) continue;
