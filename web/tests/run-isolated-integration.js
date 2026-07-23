@@ -110,7 +110,7 @@ async function main() {
     try {
       execSync('npx vitest run src/tests/realBackendIntegration.test.js', {
         cwd: webDir,
-        env: Object.assign({}, process.env, {
+        env: Object.assign({}, env, {
           RUN_REAL_BACKEND_TESTS: 'true',
           TEST_API_BASE_URL: TEST_BASE_URL,
           TEST_USER_PASSWORD: testSeedPassword
