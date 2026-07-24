@@ -1,42 +1,66 @@
-# --- .NET Build Artifacts ---
-[Bb]in/
-[Oo]bj/
+# .NET build artifacts
+**/bin/
+**/obj/
 *.user
+*.suo
 *.userosscache
 *.sln.docstates
 
-# --- Node/Frontend ---
-node_modules/
-dist/
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Visual Studio / Rider / VS Code
+.vs/
+.vscode/
+.idea/
+*.iws
+
+# Node and Vite
+web/node_modules/
+web/dist/
+web/.vite/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# --- IDE & Editors ---
-.vs/
-.vscode/
-*.suo
-*.user
-*.sln.docstates
-.idea/
-*.iws
-.DS_Store
-
-# --- Local Databases / Temporary files ---
-*.db
-*.log
-
-*.docx
-*.pdf
-
-.agents/
-# --- Playwright Test Artifacts ---
+# Test output
+TestResults/
+*.trx
+coverage/
+web/coverage/
 web/test-results/
 web/playwright-report/
 web/blob-report/
+playwright/.cache/
+
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+*.local
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+
+# Logs and temporaries
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
 query.sql
+
+# Database backups and exports
+*.dump
+*.backup
+*.bak.sql
+*.sqlite
+*.db
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Obsidian editor workspace
+.obsidian/
+
+# Agents workspace
+.agents/
